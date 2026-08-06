@@ -20,8 +20,8 @@ having no origin for Turnstile to check. Serving over `http://localhost:<port>/`
 widget's registered domains, alongside `127.0.0.1`) is required to exercise the full form locally,
 Turnstile included.
 
-For the Worker subproject (`n8n-webhook-proxy/plain-morning-dda2/`, not tracked in this repo — see
-below), from inside that directory:
+The Cloudflare Worker backing the contact form lives in a separate project, not tracked in this
+repo (see below). From inside its local working copy:
 
 ```bash
 npm install
@@ -57,8 +57,8 @@ Browser → Cloudflare Turnstile (client-side widget + server-side siteverify)
         → n8n webhook (JWT-authenticated)
 ```
 
-The Worker (`n8n-webhook-proxy/plain-morning-dda2/src/index.ts`) is the only place any secret
-exists. Per request it:
+The Worker (`src/index.ts` in its own project) is the only place any secret exists. Per request
+it:
 
 1. Enforces CORS against an origin allowlist (prod domain + `localhost`/`127.0.0.1`/`null` for
    local dev).
@@ -80,11 +80,11 @@ background on the JWT-signing approach, not a description of the current `src/in
 
 ### The Worker source is intentionally not in this git repo
 
-`n8n-webhook-proxy/` is gitignored. The Worker is deployed independently via `wrangler deploy` —
-deploys have no connection to this repo's git history, so removing/editing files here never
-affects what's live on Cloudflare, and vice versa. The source exists on disk only as a local
-working copy for editing before redeploying. Secrets (`JWT_SIGNING_SECRET`, `TURNSTILE_SECRET`)
-are set via `wrangler secret put` and are never in `wrangler.jsonc` or git.
+The Worker's source lives in its own separate project, outside this repo entirely, and is
+deployed independently via `wrangler deploy` — deploys have no connection to this repo's git
+history, so removing/editing files here never affects what's live on Cloudflare, and vice versa.
+Secrets (`JWT_SIGNING_SECRET`, `TURNSTILE_SECRET`) are set via `wrangler secret put` and are never
+in `wrangler.jsonc` or git.
 
 This repo (`WingManWP/testpage-wingmanwp-com`) is **public** on GitHub — keep the Worker source,
 webhook URLs, and any secrets out of tracked files accordingly.
