@@ -11,9 +11,14 @@ repo root — `index.html`, `script.js`, and `style.css` are loaded directly by 
 ## Commands
 
 There is no build/lint/test tooling for the site itself — it's plain static files. To preview
-locally, serve the directory with any static file server (e.g. `python3 -m http.server`) or open
-`index.html` directly (the "Get Started" form still works via `file://` — the Worker's CORS
-allowlist explicitly permits the `null` origin browsers send for local files).
+locally, serve the directory with any static file server (e.g. `python3 -m http.server`) rather
+than opening `index.html` directly. The Worker's CORS allowlist does permit the `null` origin
+browsers send for `file://` pages, but the Cloudflare Turnstile widget itself cannot: `file://`
+has no hostname at all, so Turnstile fails to render ("Unable to connect to website") regardless
+of the widget's domain allowlist — there's no code fix for this, it's inherent to `file://`
+having no origin for Turnstile to check. Serving over `http://localhost:<port>/` (already in the
+widget's registered domains, alongside `127.0.0.1`) is required to exercise the full form locally,
+Turnstile included.
 
 For the Worker subproject (`n8n-webhook-proxy/plain-morning-dda2/`, not tracked in this repo — see
 below), from inside that directory:
