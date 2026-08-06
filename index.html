@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=1280, initial-scale=1.0">
   <title>Songfacts API — Invigorate your app</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
 </head>
 <body>
 
@@ -287,6 +288,10 @@
               <option value="100k+">100,000+ requests</option>
             </select>
           </div>
+        </div>
+
+        <div class="form-row">
+          <div id="turnstile-widget"></div>
         </div>
 
         <div class="form-actions">
