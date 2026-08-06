@@ -81,6 +81,7 @@
         </p>
 
         <div class="hero-actions">
+          <a class="btn" href="#get-started">Request Access</a>
           <a class="btn" href="#available-now">See Examples</a>
         </div>
       </div>
@@ -131,10 +132,10 @@
       <hr class="divider">
       <h2><span class="orange">Very Human,</span> Very Interesting.</h2>
       <p>
-        Far beyond standard metadata, these facts are the kind of talking points that
-        music-obsessed friend of yours is always telling you about. Written by real human
+        Far beyond standard metadata, these facts are the kind of talking points your
+        music-obsessed friend is always telling you about. Written by real human
         music experts, they've been used for years by streaming services and broadcasters
-        to engage their audiences and make their product stand out from the services that
+        to engage their audiences and make their products stand out from the services that
         supply only credits or AI summaries.
       </p>
       <hr class="divider">
@@ -163,9 +164,9 @@
           </span>
           <h3 class="feature-title">Artistfacts</h3>
           <p>
-            Artistfacts are curated trivia and background on musicians, bands, and performers,
-            giving users a deeper look at the artists behind the music. Explore their origins,
-            lineup changes, personal stories, influences, and lasting legacy.
+            Artistfacts are curated trivia and background on the singers and bands, giving
+            users a deeper look at the artists behind the music. Explore their origins,
+            lineups, personal stories, influences and lasting legacy.
           </p>
           <a class="btn-view" href="artistfacts-examples.html">View Examples <span aria-hidden="true">&rarr;</span></a>
         </article>
@@ -194,7 +195,7 @@
           </span>
           <h3 class="feature-title">Music History Calendar</h3>
           <p>
-            Skip the incomplete, obscure &amp; rock-centric lists. Give users the biggest
+            Skip the incomplete, obscure &amp; rock-centric lists. Show users the biggest
             moments in music history that happened on this day.
           </p>
           <a class="btn-view" href="music-history-calendar-examples.html">View Examples <span aria-hidden="true">&rarr;</span></a>
@@ -242,8 +243,8 @@
 
     <section class="get-started" id="get-started">
       <span class="eyebrow">Get Started</span>
-      <h2>Want to <span class="orange">Learn More?</span></h2>
-      <p>See how the SongFacts API works and what it can do for you. Fill out the form and we'll be in touch.</p>
+      <h2>Want to <span class="orange">Give it a Try?</span></h2>
+      <p>See how the Songfacts API works and what it can do for you. Fill out this form and we'll be in touch.</p>
 
       <form class="api-form" id="api-form">
         <div class="form-row">
@@ -268,25 +269,10 @@
           </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-row form-row-full">
           <div class="form-field">
-            <label for="industry">Industry</label>
-            <select id="industry" name="industry">
-              <option value="" selected disabled>Select Industry</option>
-              <option value="streaming">Streaming Service</option>
-              <option value="broadcast">Broadcast / Radio</option>
-              <option value="publishing">Publishing / Media</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label for="usage">Estimated API Monthly Usage</label>
-            <select id="usage" name="usage">
-              <option value="" selected disabled>Select Range</option>
-              <option value="0-10k">0 – 10,000 requests</option>
-              <option value="10k-100k">10,000 – 100,000 requests</option>
-              <option value="100k+">100,000+ requests</option>
-            </select>
+            <label for="message">Please describe your application and tell us how you'd like to use the data.</label>
+            <textarea id="message" name="message" rows="4" placeholder="Please describe your application and tell us how you'd like to use the data."></textarea>
           </div>
         </div>
 
@@ -295,7 +281,7 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn">Send Request</button>
+          <button type="submit" class="btn">Request Access</button>
           <span class="form-note" id="form-status">We'll be in touch.</span>
         </div>
       </form>

@@ -60,8 +60,7 @@ if (form) {
       lastName: form.lastName.value,
       email: form.email.value,
       company: form.company.value,
-      industry: form.industry.value,
-      estimatedUsage: form.usage.value,
+      message: form.message.value,
       submittedAt: new Date().toISOString(),
       turnstileToken,
     };

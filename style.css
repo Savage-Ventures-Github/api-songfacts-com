@@ -184,6 +184,7 @@ body {
 
 .dark-panel {
   position: relative;
+  min-height: 100vh;
   background: var(--dark-bg);
   overflow: hidden;
 }
@@ -513,6 +514,10 @@ body {
   margin-bottom: 1.1rem;
 }
 
+.form-row-full {
+  grid-template-columns: 1fr;
+}
+
 .form-field {
   display: flex;
   flex-direction: column;
@@ -528,7 +533,8 @@ body {
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--card-border);
   border-radius: 4px;
@@ -538,7 +544,12 @@ body {
   font-family: inherit;
 }
 
-.form-field input::placeholder {
+.form-field textarea {
+  resize: vertical;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
   color: #9a8a92;
 }
 
