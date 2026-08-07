@@ -4,7 +4,10 @@ This is a WordPress plugin that will be installed on `helpers.savage.ventures` w
 
 ## Overview
 
-> As of Aug 7 2026, the songfacts API landing page sends payloads to a CF worker, and the CF worker sends the authenticated payloads to an n8n webhook endpoint. 
+> As of Aug 7 2026, the Songfacts API landing page sends payloads to a CF Worker, and the Worker
+> posts the authenticated payload directly to this WordPress plugin's REST endpoint. (Originally
+> the Worker relayed through an n8n webhook — that hop was removed in Milestone 2, verified via a
+> real end-to-end form submission the same day. n8n's webhook workflow can be decommissioned.)
 
 **Mermaid Diagram**
 
@@ -14,14 +17,14 @@ sequenceDiagram
     actor V as Visitor
     participant LP as Landing Page<br/>(Interest Form)
     participant CF as Cloudflare Worker
-    participant N8N as n8n Webhook Endpoint
+    participant WP as WordPress<br/>(Songfacts API CRM)
 
     V->>LP: Fills out interest form
     LP->>CF: POST form payload (HTTPS)
-    Note over CF: Validate / sanitize input<br/>Attach auth (HMAC or bearer token)
-    CF->>N8N: POST authenticated payload
-    N8N-->>CF: 200 Success
-    CF-->>LP: 200 Success
+    Note over CF: Validate / sanitize input<br/>Verify Turnstile<br/>Sign short-lived JWT
+    CF->>WP: POST authenticated payload
+    WP-->>CF: 201 Created
+    CF-->>LP: 201 Created
     LP-->>V: Confirmation message
 ```
 
@@ -34,20 +37,21 @@ name **Songfacts API Landing Page** (slug `songfacts-api-landingpage`).
 
 ## Create WordPress REST API Endpoint
 
-`POST /wp-json/songfacts-crm/v1/submissions` — receives the payload n8n forwards after the CF
-Worker authenticates it. Body fields (matching the shape `script.js` sends today): `firstName`,
-`lastName`, `email`, `company`, `message`, `submittedAt`. Any `turnstileToken` field, if present,
-is discarded rather than stored.
+`POST /wp-json/songfacts-crm/v1/submissions` — receives the payload posted directly by the CF
+Worker (see Milestone 2; originally this went through an n8n webhook, which forwarded the same
+JWT-bearing request on to here). Body fields (matching the shape `script.js` sends today):
+`firstName`, `lastName`, `email`, `company`, `message`, `submittedAt`. Any `turnstileToken` field,
+if present, is discarded rather than stored.
 
 **Auth:** the request must carry `Authorization: Bearer <token>`, where `<token>` is an HS256 JWT
-signed with the *same* `JWT_SIGNING_SECRET` the Cloudflare Worker already uses to authenticate to
-n8n (see the Worker's own project). In other words, n8n's workflow needs to forward that same
-JWT/header through to this endpoint (unexpired) rather than minting new credentials — chosen
-specifically so Milestone 2 (Worker → WordPress directly) needs no auth changes on the WordPress
-side, only a different caller.
+signed with the *same* `JWT_SIGNING_SECRET` the Cloudflare Worker signs with (see the Worker's own
+project). This endpoint's auth was deliberately built to verify that exact JWT from day one —
+which is why Milestone 2 (routing the Worker straight here instead of through n8n) needed no
+WordPress-side auth changes, only a different caller.
 
 Enter the shared secret at **wp-admin → Songfacts API CRM → Settings**. It must exactly match the
-Worker's `JWT_SIGNING_SECRET`.
+Worker's `JWT_SIGNING_SECRET` byte-for-byte — a mismatch here is exactly what caused the first
+Milestone 2 end-to-end test to fail with a `401` (see Milestone 2 below).
 
 Quick manual test (replace `$JWT` with a token signed using the shared secret):
 
@@ -102,8 +106,9 @@ other gotchas discovered while building the plugin.
 
 Upon milestone 1 completedion - then re-route the CF Worker to write directly to WordPress instead of n8n.
 
-- [x]  RE-ROUTE The CF Worker to WordPress instead of to n8n — code change made, **not yet
-       deployed** (see below).
+- [x]  RE-ROUTE The CF Worker to WordPress instead of to n8n — code change made, deployed, and
+       verified end-to-end (real form submission through Turnstile, landed in wp-admin →
+       Songfacts API CRM → Submissions) on 2026-08-07. **Milestone 2 complete.**
 
 The Worker's own project lives outside this repo at
 `~/WebstormProjects/songfacts-api-interest-submission` (see root `CLAUDE.md`). `src/index.ts` now
@@ -112,11 +117,21 @@ of `env.N8N_WEBHOOK_URL` — everything upstream of that (CORS, rate limiting, p
 Turnstile verification, JWT signing) is unchanged, since Milestone 1's WordPress auth was
 deliberately built to verify the exact same JWT the Worker already signs. `N8N_WEBHOOK_URL` was
 dropped from the `Env` interface since it's a plain public REST URL, not a secret — no new
-`wrangler secret put` needed. The `N8N_WEBHOOK_URL` secret itself is now unused on the Worker and
-can be removed with `wrangler secret delete N8N_WEBHOOK_URL` once the new path is confirmed
-working in production; harmless to leave in place otherwise.
+`wrangler secret put` needed.
 
-**Still to do:** `wrangler deploy` from that project to ship it, then a real end-to-end test
-(submit the landing page form and confirm the row lands in wp-admin → Songfacts API CRM →
-Submissions) before considering this done. n8n itself and its webhook workflow can be
-decommissioned once that's confirmed.
+**Debugging note for next time:** the first end-to-end attempt failed with a `401` — reproduced by
+tailing the live Worker (`wrangler tail songfacts-api-interest-submission --format json`), which
+showed the WP-bound `POST` itself returning `401` (the Worker has no 401 of its own, so this was
+WordPress's `SF_LP_JWT::verify()` rejecting the token — a straight pass-through of `upstream.status`).
+Root cause was the Worker's `JWT_SIGNING_SECRET` and WordPress's `sf_lp_jwt_secret` option having
+drifted out of sync after the secret was rotated earlier that day. Fixed by re-running
+`wrangler secret put JWT_SIGNING_SECRET` (from inside the Worker's project directory, or with
+`--name songfacts-api-interest-submission` from elsewhere) with the value that matches the WP
+Settings field exactly, then retrying. If a `401` shows up again after any future secret rotation,
+check this pairing first.
+
+**Cleanup, now safe to do:**
+- `N8N_WEBHOOK_URL` secret is unused on the Worker; remove with
+  `wrangler secret delete N8N_WEBHOOK_URL --name songfacts-api-interest-submission` (harmless to
+  leave in place if you'd rather not bother).
+- n8n's webhook workflow for this integration can be decommissioned/disabled.

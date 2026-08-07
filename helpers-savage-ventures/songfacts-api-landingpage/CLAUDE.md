@@ -1,7 +1,9 @@
 # CLAUDE.md
 
 Guidance for working on this plugin specifically. See `../README.md` for the overall
-Songfacts API landing page → Worker → n8n → WordPress pipeline and Milestone 1/2 context.
+Songfacts API landing page → Worker → WordPress pipeline and Milestone 1/2 context (Milestone 2 —
+routing the Worker straight here instead of through n8n — shipped and was verified end-to-end on
+2026-08-07; n8n is no longer in this path).
 
 ## What this is
 
@@ -22,7 +24,8 @@ so they know what to push.**
   `dbDelta` in `install()` (called on activation only — there's no upgrade routine, so a schema
   change requires deactivate/reactivate or a manual `ALTER TABLE` on an already-live install).
 - `includes/class-sf-rest-controller.php` — `POST /wp-json/songfacts-crm/v1/submissions`, the
-  landing-page → Worker → n8n → **here** endpoint. `check_auth()` is the `permission_callback`.
+  landing-page → Worker → **here** endpoint (direct since Milestone 2). `check_auth()` is the
+  `permission_callback`.
 - `includes/class-sf-list-table.php` — `WP_List_Table` subclass for the Submissions screen.
   `single_row()` renders each row plus a sibling `<tr class="sf-lp-detail-row">` (hidden by
   default) for the click-to-expand detail view.
@@ -73,6 +76,19 @@ Songfacts API CRM → Settings). This must exactly match the Cloudflare Worker's
 never something Claude has access to or can retrieve; if it's lost, the fix is generating a new
 one and setting it in both places; **plaintext JWT secrets are never sent to Claude and this
 plugin does not need it accessed for development.**
+
+**If real traffic starts getting `401`s from this endpoint, suspect a secret mismatch first.**
+This is the exact failure hit during the Milestone 2 end-to-end test: the Worker's own code has no
+401 of its own (it uses 403/405/429/400/502), so a `401` reaching the browser is WordPress
+rejecting the JWT, passed straight through by the Worker's `return new Response(upstreamBody,
+{ status: upstream.status, ... })`. Diagnosed by tailing the live Worker
+(`wrangler tail songfacts-api-interest-submission --format json` from
+`~/WebstormProjects/songfacts-api-interest-submission`) and reading the POST event's
+`response.status` — the Worker's pretty-format tail output only shows a runtime "Ok"/"Error"
+outcome, not the actual HTTP status, so it looked fine there even while returning 401. Root cause
+was the Worker's `JWT_SIGNING_SECRET` and this plugin's `sf_lp_jwt_secret` option drifting out of
+sync after a secret rotation. Fix: `wrangler secret put JWT_SIGNING_SECRET` on the Worker with a
+value that exactly matches the WP Settings field.
 
 ## Sample data
 

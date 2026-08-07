@@ -46,19 +46,21 @@ sample API output for each Songfacts endpoint category. All of them share `style
 `index.html` and `trivia-examples.html` load `script.js` (the trivia pages need it for the
 answer-reveal toggle, which does no scoring — there's no source of correct answers).
 
-### Contact form → Cloudflare Worker → n8n pipeline
+### Contact form → Cloudflare Worker → WordPress pipeline
 
 The "Get Started" form (`#api-form` in `index.html`, handled in `script.js`) cannot hold a secret
-client-side, so it never calls n8n directly. Full chain:
+client-side, so it never calls the destination directly. Full chain (as of 2026-08-07 — see
+`helpers-savage-ventures/README.md` for the Milestone 1/2 history; this used to route through an
+n8n webhook, removed in Milestone 2 and verified end-to-end):
 
 ```
 Browser → Cloudflare Turnstile (client-side widget + server-side siteverify)
         → Cloudflare Worker (songfacts-api-interest-submission.shane-df2.workers.dev)
-        → n8n webhook (JWT-authenticated)
+        → WordPress REST endpoint (helpers.savage.ventures, JWT-authenticated)
 ```
 
-The Worker (`src/index.ts` in its own project) is the only place any secret exists. Per request
-it:
+The Worker (`src/index.ts` in its own project, `~/WebstormProjects/songfacts-api-interest-submission`
+on this machine) is the only place any secret exists. Per request it:
 
 1. Enforces CORS against an origin allowlist (prod domain + `localhost`/`127.0.0.1`/`null` for
    local dev).
@@ -68,15 +70,23 @@ it:
    HTML's actual `required` attributes, length caps, email format).
 4. Verifies the Turnstile token via `siteverify`, checking `action` and `hostname` — rejects
    before anything is forwarded.
-5. Signs a short-lived HS256 JWT (`JWT_SIGNING_SECRET`) and forwards the sanitized payload to the
-   n8n webhook URL (`N8N_WEBHOOK_URL`), which requires that JWT via n8n's own "JWT Auth" credential
-   on the Webhook node.
-6. Relays n8n's response status/body straight back to the browser — it's a synchronous pass-through,
-   not fire-and-forget, so n8n's Webhook node response mode determines what the visitor actually sees.
+5. Signs a short-lived HS256 JWT (`JWT_SIGNING_SECRET`) and POSTs the sanitized payload straight to
+   `https://helpers.savage.ventures/wp-json/songfacts-crm/v1/submissions`, which verifies that same
+   JWT (see `helpers-savage-ventures/songfacts-api-landingpage/includes/class-sf-jwt.php`).
+6. Relays WordPress's response status/body straight back to the browser — it's a synchronous
+   pass-through, not fire-and-forget.
+
+If real submissions start getting `401`s, it's almost always the Worker's `JWT_SIGNING_SECRET` and
+WordPress's `sf_lp_jwt_secret` option (wp-admin → Songfacts API CRM → Settings) having drifted out
+of sync after a secret rotation — the Worker itself has no 401 of its own, so a 401 reaching the
+browser is WordPress rejecting the JWT, passed through verbatim. Diagnose with
+`wrangler tail songfacts-api-interest-submission --format json` (pretty-format tail only shows a
+runtime Ok/Error outcome, not the actual HTTP status).
 
 `docs/cloudflare-worker-setup.md` documents the base Worker/JWT pattern this was built from, but
-predates the CORS allowlist, rate limiting, payload validation, and Turnstile — treat it as
-background on the JWT-signing approach, not a description of the current `src/index.ts`.
+predates the CORS allowlist, rate limiting, payload validation, Turnstile, and the WordPress
+destination — treat it as background on the JWT-signing approach, not a description of the current
+`src/index.ts`.
 
 ### The Worker source is intentionally not in this git repo
 
