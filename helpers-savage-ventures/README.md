@@ -100,4 +100,23 @@ other gotchas discovered while building the plugin.
 
 # Milestone 2 - Update the CF Worker
 
-Upon milestone 1 completedion - then re-route the CF Worker to write directly to WordPress instead of n8n. 
+Upon milestone 1 completedion - then re-route the CF Worker to write directly to WordPress instead of n8n.
+
+- [x]  RE-ROUTE The CF Worker to WordPress instead of to n8n — code change made, **not yet
+       deployed** (see below).
+
+The Worker's own project lives outside this repo at
+`~/WebstormProjects/songfacts-api-interest-submission` (see root `CLAUDE.md`). `src/index.ts` now
+posts directly to `https://helpers.savage.ventures/wp-json/songfacts-crm/v1/submissions` instead
+of `env.N8N_WEBHOOK_URL` — everything upstream of that (CORS, rate limiting, payload validation,
+Turnstile verification, JWT signing) is unchanged, since Milestone 1's WordPress auth was
+deliberately built to verify the exact same JWT the Worker already signs. `N8N_WEBHOOK_URL` was
+dropped from the `Env` interface since it's a plain public REST URL, not a secret — no new
+`wrangler secret put` needed. The `N8N_WEBHOOK_URL` secret itself is now unused on the Worker and
+can be removed with `wrangler secret delete N8N_WEBHOOK_URL` once the new path is confirmed
+working in production; harmless to leave in place otherwise.
+
+**Still to do:** `wrangler deploy` from that project to ship it, then a real end-to-end test
+(submit the landing page form and confirm the row lands in wp-admin → Songfacts API CRM →
+Submissions) before considering this done. n8n itself and its webhook workflow can be
+decommissioned once that's confirmed.

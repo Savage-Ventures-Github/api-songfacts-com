@@ -1,6 +1,6 @@
 .DS_Store
 landingpage_v7.pdf
-
+.wrangler/
 # Local Node Things
 # Ignore these, cause this is not a node app, and these are only necessray for interim wrangler worker things
 node_modules/
