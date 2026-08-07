@@ -82,6 +82,20 @@ Zip the `songfacts-api-landingpage/` folder (or copy it as-is into `wp-content/p
 creates the `{$wpdb->prefix}sflp_submissions` table via `dbDelta`; deleting the plugin (not just
 deactivating) drops that table and the stored secret.
 
+### Deploying changes / cache gotcha
+
+This site isn't wired to any CI — updated plugin files are pushed to
+`helpers.savage.ventures` manually (WP File Manager / direct file copy), then activated/reloaded
+by hand. **Whenever `admin/js/admin.js` or `admin/css/admin.css` changes, bump `SF_LP_VERSION`**
+in `songfacts-api-landingpage.php` — it's the cache-busting query string
+(`admin.js?ver=<version>`) WordPress appends via `wp_enqueue_script()`/`wp_enqueue_style()`. Skip
+the bump and browsers that already visited the Settings/Submissions page keep serving the old
+cached file from that exact versioned URL even after the new file is live on the server — this bit
+us during development (worked in a fresh browser profile, silently failed in an everyday Chrome
+profile with cached assets) and cost real debugging time. See
+[`songfacts-api-landingpage/CLAUDE.md`](songfacts-api-landingpage/CLAUDE.md) for more on this and
+other gotchas discovered while building the plugin.
+
 ---
 
 # Milestone 2 - Update the CF Worker
