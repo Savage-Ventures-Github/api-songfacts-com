@@ -1,14 +1,14 @@
 // ---------------------------------------------------------------------------
 // ⚙️  Configuration
 // ---------------------------------------------------------------------------
-// Same Cloudflare Worker proxy as before — it signs a JWT server-side and
-// forwards to the prod n8n webhook. See docs/cloudflare-worker-setup.md.
-const WEBHOOK_URL = "https://plain-morning-dda2.wingmanwp.workers.dev";
+// Cloudflare Worker proxy — it signs a JWT server-side and forwards to the
+// prod n8n webhook. See docs/cloudflare-worker-setup.md.
+const WEBHOOK_URL = "https://songfacts-api-interest-submission.shane-df2.workers.dev";
 
 // Turnstile sitekey (public, safe to ship client-side — the secret half
-// lives only in the Worker). Registered for testpage.wingmanwp.com +
+// lives only in the Worker). Registered for api-draft.songfacts.com +
 // localhost/127.0.0.1.
-const TURNSTILE_SITEKEY = "0x4AAAAAAEIQJVqzKjEHQ0uh";
+const TURNSTILE_SITEKEY = "0x4AAAAAAEItXaalyJ7kIYuB";
 
 // ---------------------------------------------------------------------------
 // 📨 "Get Started" contact form -> webhook

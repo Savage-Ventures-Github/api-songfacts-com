@@ -53,7 +53,7 @@ client-side, so it never calls n8n directly. Full chain:
 
 ```
 Browser → Cloudflare Turnstile (client-side widget + server-side siteverify)
-        → Cloudflare Worker (plain-morning-dda2.wingmanwp.workers.dev)
+        → Cloudflare Worker (songfacts-api-interest-submission.shane-df2.workers.dev)
         → n8n webhook (JWT-authenticated)
 ```
 
