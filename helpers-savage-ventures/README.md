@@ -27,17 +27,60 @@ sequenceDiagram
 
 ---
 
-# [WIP] Milestone 1 - WordPress Destination
+# Milestone 1 - WordPress Destination
+
+Implemented as the plugin in [`songfacts-api-landingpage/`](songfacts-api-landingpage), plugin
+name **Songfacts API Landing Page** (slug `songfacts-api-landingpage`).
 
 ## Create WordPress REST API Endpoint
 
-First, we must create a way for WordPress to receive these payloads from n8n (and eventually directly from the CF worker).
+`POST /wp-json/songfacts-crm/v1/submissions` — receives the payload n8n forwards after the CF
+Worker authenticates it. Body fields (matching the shape `script.js` sends today): `firstName`,
+`lastName`, `email`, `company`, `message`, `submittedAt`. Any `turnstileToken` field, if present,
+is discarded rather than stored.
+
+**Auth:** the request must carry `Authorization: Bearer <token>`, where `<token>` is an HS256 JWT
+signed with the *same* `JWT_SIGNING_SECRET` the Cloudflare Worker already uses to authenticate to
+n8n (see the Worker's own project). In other words, n8n's workflow needs to forward that same
+JWT/header through to this endpoint (unexpired) rather than minting new credentials — chosen
+specifically so Milestone 2 (Worker → WordPress directly) needs no auth changes on the WordPress
+side, only a different caller.
+
+Enter the shared secret at **wp-admin → Songfacts API CRM → Settings**. It must exactly match the
+Worker's `JWT_SIGNING_SECRET`.
+
+Quick manual test (replace `$JWT` with a token signed using the shared secret):
+
+```bash
+curl -i -X POST https://helpers.savage.ventures/wp-json/songfacts-crm/v1/submissions \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{"firstName":"Ada","lastName":"Lovelace","email":"ada@example.com","company":"Analytical Engines","message":"Interested in the API.","submittedAt":"2026-08-07T12:00:00Z"}'
+```
+
+Expect `201` with `{"id":<n>,"status":"received"}` on success, `401` if the bearer token is
+missing/invalid/expired, `400` on a malformed payload.
 
 ## Render on the WP-Admin
-1. Add a topmost admin menu named `Songfacts API CRM` dashicons-media-audio
-2. Register first submenu named `Submissions`
-3. Render a list of the received payloads of data from the website interest form. Show this in a wordpress admin side list style, and upon a row being clicked, just expand in place the details of the submission
-4. Add an inline "Mark as Completed" to record here in place in wp, the fact that a submission has been responded to by administrators. 
+1. Topmost admin menu `Songfacts API CRM` (dashicons-media-audio) ✅
+2. Submenu `Submissions` ✅ — lists received payloads in a standard `WP_List_Table`; clicking a
+   row expands its detail (message, received/completed timestamps) in place, no navigation.
+3. Inline **Mark as Completed** button per row — AJAX call to `wp_ajax_sf_lp_mark_completed`,
+   updates the row's status badge without a page reload.
+4. Submenu `Settings` (not in the original spec, added because the JWT secret needs somewhere to
+   live) — holds the shared JWT secret described above, plus two testing buttons:
+   - **Populate Sample Submissions** — inserts ten fake, clearly-flagged (`is_sample = 1`) rows
+     spread over the past several days (a mix of `new`/`completed` status) so the Submissions
+     list and admin UI can be exercised before real traffic exists.
+   - **Delete Sample Submissions** — removes every `is_sample = 1` row. Never touches real
+     submissions from the REST endpoint, which always insert with `is_sample = 0`.
+
+### Install
+
+Zip the `songfacts-api-landingpage/` folder (or copy it as-is into `wp-content/plugins/`) on
+`helpers.savage.ventures`, then activate **Songfacts API Landing Page** from Plugins. Activation
+creates the `{$wpdb->prefix}sflp_submissions` table via `dbDelta`; deleting the plugin (not just
+deactivating) drops that table and the stored secret.
 
 ---
 

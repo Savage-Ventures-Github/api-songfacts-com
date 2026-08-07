@@ -1,0 +1,42 @@
+.sf-lp-row {
+	cursor: pointer;
+}
+
+.sf-lp-row-expanded {
+	background: #f6f7f7;
+}
+
+.sf-lp-detail-row td {
+	background: #f6f7f7;
+	border-top: 1px solid #dcdcde;
+}
+
+.sf-lp-detail {
+	padding: 8px 4px;
+	max-width: 640px;
+}
+
+.sf-lp-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+}
+
+.sf-lp-badge-new {
+	background: #fff8e5;
+	color: #996800;
+	border: 1px solid #f0c33c;
+}
+
+.sf-lp-badge-completed {
+	background: #edfaef;
+	color: #1e8a33;
+	border: 1px solid #68de7c;
+}
+
+.sf-lp-mark-completed {
+	margin-left: 6px;
+}
