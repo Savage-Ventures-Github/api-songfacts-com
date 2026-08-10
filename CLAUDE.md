@@ -43,8 +43,14 @@ handler) — it does not exercise the actual proxy logic in `src/index.ts`.
 `script.js`). The `*-examples.html` files (`artistfacts-`, `blurbs-`, `categories-`,
 `music-history-calendar-`, `quotes-`, `songfacts-`, `trivia-`) are standalone demo pages showing
 sample API output for each Songfacts endpoint category. All of them share `style.css`; only
-`index.html` and `trivia-examples.html` load `script.js` (the trivia pages need it for the
-answer-reveal toggle, which does no scoring — there's no source of correct answers).
+`index.html` loads `script.js`. Every example page is static markup — nothing on them is wired
+up. The controls that look interactive are deliberate mockups of what a client would build: the
+calendar's date/artist search fields query nothing, the trivia answers are pre-revealed via
+`.trivia-answer.is-correct` (the v7 design supplies the correct answers, so the old click-to-
+select toggle was removed), and the trivia audio players have no audio behind them.
+
+The page designs come from `landingpage_v7.pdf` in the repo root (8 pages: the landing page plus
+one per example page) — treat it as the source of truth when the two disagree.
 
 ### Contact form → Cloudflare Worker → WordPress pipeline
 

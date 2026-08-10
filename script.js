@@ -104,16 +104,7 @@ if (form) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// ❓ Trivia answer buttons (Trivia Examples page) — just a selection toggle,
-// no scoring logic since the source design doesn't specify correct answers.
-// ---------------------------------------------------------------------------
-document.querySelectorAll(".trivia-card").forEach((card) => {
-  const buttons = card.querySelectorAll(".trivia-answer");
-  buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      buttons.forEach((b) => b.classList.remove("is-selected"));
-      button.classList.add("is-selected");
-    });
-  });
-});
+// The Trivia Examples page used to have a click-to-select toggle here. The v7
+// mockup shows each example already answered — the correct option highlighted
+// and its response copy below — so selection is now static markup
+// (.trivia-answer.is-correct) and there is nothing left to wire up.
