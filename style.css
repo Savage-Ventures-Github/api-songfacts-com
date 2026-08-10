@@ -1,11 +1,29 @@
+/* Brand palette as supplied by the designer. The six --brand-* values are her
+   exact hex codes; everything below them is a role that maps onto one. Change
+   a role, not a brand value. */
 :root {
-  --orange: #e8632b;
-  --purple: #9c2f96;
-  --purple-hover: #b23aac;
-  --pink: #d9469c;
+  --brand-purple: #b241a2;
+  --brand-purple-med: #d18dc7;
+  --brand-purple-light: #e0b3da;
+  --brand-orange: #e9661f;
+  --brand-orange-light: #f6c2a5;
+  --brand-grey: #5c5c5c;
+
+  --orange: var(--brand-orange);
+  --purple: var(--brand-purple);
+  /* No hover tint in the supplied palette — this lifts --brand-purple toward
+     --brand-purple-med so buttons still respond without leaving the family. */
+  --purple-hover: #c456b3;
+  /* Accent text on the dark panel (breadcrumb, category labels, "Response »").
+     Uses Medium Purple rather than Purple: at these small sizes Purple lands
+     around 2.4:1 against the card background, which is not readable. */
+  --pink: var(--brand-purple-med);
+  /* The revealed correct answer on the trivia page. */
+  --purple-answer: var(--brand-purple-med);
+
   --dark-bg: #2c1c26;
   --card-bg: #2a2a2a;
-  --card-border: #b5552c;
+  --card-border: var(--brand-orange);
   --text-body: #d9cfd4;
 }
 
@@ -76,7 +94,7 @@ body {
 }
 
 .main-nav a {
-  color: #3a3a3a;
+  color: var(--brand-grey);
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 600;
@@ -175,7 +193,7 @@ body {
 }
 
 .social-links a {
-  color: #6b6b6b;
+  color: var(--brand-grey);
   display: flex;
 }
 
@@ -199,18 +217,18 @@ body {
   z-index: 1;
 }
 
+/* The designer's bubble artwork, knocked well back so it reads as texture
+   behind the dark panel rather than as content. It replaced a stack of CSS
+   radial gradients that approximated it. Upscaling is safe here — the source
+   is nothing but soft gradients. */
 .decor-bg {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 8% 8%, rgba(200, 90, 45, 0.32), transparent 32%),
-    radial-gradient(circle at 94% 18%, rgba(155, 60, 130, 0.28), transparent 35%),
-    radial-gradient(circle at 10% 45%, rgba(120, 50, 90, 0.3), transparent 32%),
-    radial-gradient(circle at 90% 55%, rgba(210, 110, 50, 0.26), transparent 35%),
-    radial-gradient(circle at 15% 85%, rgba(155, 60, 130, 0.3), transparent 32%),
-    radial-gradient(circle at 88% 92%, rgba(200, 90, 45, 0.28), transparent 35%);
-  filter: blur(14px);
+  background-image: url("img/page_bg.jpg");
+  background-size: cover;
+  background-position: center top;
+  opacity: 0.12;
 }
 
 .divider {
@@ -1205,8 +1223,12 @@ body {
   height: 64px;
   border-radius: 4px;
   flex-shrink: 0;
+  border: 1px solid var(--card-border);
   background: linear-gradient(135deg, #4a2e42, #7a3a2c);
   object-fit: cover;
+  /* Several supplied portraits are tall crops; anchoring the top keeps the
+     subject's face in a 64px square instead of centring on their torso. */
+  object-position: center top;
 }
 
 .quote-attribution .name {
@@ -1286,7 +1308,7 @@ body {
 
 /* The mockup shows each example with its answer already revealed. */
 .trivia-answer.is-correct {
-  background: #c98cc6;
+  background: var(--purple-answer);
 }
 
 .trivia-response-label {

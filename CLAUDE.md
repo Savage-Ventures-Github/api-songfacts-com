@@ -52,6 +52,23 @@ select toggle was removed), and the trivia audio players have no audio behind th
 The page designs come from `landingpage_v7.pdf` in the repo root (8 pages: the landing page plus
 one per example page) — treat it as the source of truth when the two disagree.
 
+### Images and brand colors
+
+`img/` filenames encode their slot: `home_*` (landing hero), `sf_*` / `af_*` (Songfacts /
+ArtistFacts tiles), `cf_<level>_<n>` (the Categories rabbit-hole chain), `bf_song_*` /
+`bf_artist_*` (Blurbs columns), `sf_q_*` (Quotes avatars), `trivia_*` (the player artwork, which
+is a flat image of a player, not a built component), `page_bg` (the bubble texture behind every
+dark panel). Designer-supplied art is downsized with `sips` and stored as JPEG — 400px for the
+large tiles, 200px for thumbnails and avatars — since the originals arrive as 1–10MB Getty files.
+Non-square art is cropped by CSS `object-fit: cover`, with `object-position: center top` where a
+centered crop would cut off a face.
+
+The designer's palette lives at the top of `style.css` as `--brand-*` custom properties holding
+her exact hex codes, with role variables (`--orange`, `--purple`, `--pink`, …) mapped onto them.
+Change a role, never a `--brand-*` value. Two roles have no direct equivalent in the supplied
+palette and are documented inline where they're defined: `--purple-hover`, and `--pink`, which
+uses Medium Purple because Purple fails contrast at small text sizes on the dark panel.
+
 ### Contact form → Cloudflare Worker → WordPress pipeline
 
 The "Get Started" form (`#api-form` in `index.html`, handled in `script.js`) cannot hold a secret
