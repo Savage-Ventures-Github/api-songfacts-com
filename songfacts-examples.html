@@ -46,7 +46,7 @@
     ]
   }
   </script>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -98,6 +98,16 @@
         </a>
       </div>
     </div>
+    <nav class="tab-nav" aria-label="Sections">
+      <a href="index.html">Overview</a>
+      <a href="songfacts-examples.html" class="is-active" aria-current="page">Songfacts&reg;</a>
+      <a href="artistfacts-examples.html">Artistfacts</a>
+      <a href="categories-examples.html">Categories</a>
+      <a href="music-history-calendar-examples.html">Calendar</a>
+      <a href="blurbs-examples.html">Blurbs</a>
+      <a href="quotes-examples.html">Quotes</a>
+      <a href="trivia-examples.html">Trivia</a>
+    </nav>
   </header>
 
   <main class="dark-panel">
@@ -231,7 +241,75 @@
     </div>
   </main>
 
-  <footer class="gradient-bar" aria-hidden="true"></footer>
+  <div class="gradient-bar" aria-hidden="true"></div>
 
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <section class="footer-newsletter">
+        <h2 class="footer-heading">Songfacts&reg; Newsletter</h2>
+        <p class="footer-newsletter-copy">A monthly update on our latest interviews, stories and added songs</p>
+        <!-- AWeber hosted-form submission (stakeholder-supplied). Native cross-origin
+             POST straight to AWeber — no Worker/relay needed; see CLAUDE.md notes. -->
+        <form class="newsletter-form" method="post" role="form" accept-charset="UTF-8" action="https://www.aweber.com/scripts/addlead.pl">
+          <div hidden>
+            <input type="hidden" name="meta_web_form_id" value="515551960">
+            <input type="hidden" name="meta_split_id" value="">
+            <input type="hidden" name="listname" value="songfacts">
+            <input type="hidden" name="redirect" value="https://www.songfacts.com/notify/newsletter-success" id="redirect_f0c15ad2487b51b769eee6f6feb4536c">
+            <input type="hidden" name="meta_adtracking" value="songfacts_2020">
+            <input type="hidden" name="meta_message" value="1001">
+            <input type="hidden" name="meta_required" value="email">
+            <input type="hidden" name="meta_tooltip" value="">
+          </div>
+          <label for="newsletter-email" class="sr-only">What's your email?</label>
+          <input class="newsletter-input" name="email" id="newsletter-email" autocorrect="off" autocapitalize="off" autocomplete="email" placeholder="What's your email?" type="email" required>
+          <button class="newsletter-button" type="submit" id="newsletter-button">Subscribe</button>
+        </form>
+      </section>
+
+      <nav class="footer-col" aria-labelledby="footer-info-heading">
+        <h2 class="footer-heading" id="footer-info-heading">Information</h2>
+        <ul class="footer-links">
+          <li><a href="https://www.songfacts.com/blog/pages/about-us" target="_blank" rel="noopener">About Us</a></li>
+          <li><a href="https://www.songfacts.com/blog/pages/terms-of-service" target="_blank" rel="noopener">Terms of Service</a></li>
+          <li><a href="https://www.songfacts.com/blog/pages/songfacts-privacy-policy-and-legal-notice" target="_blank" rel="noopener">Our Privacy Policy</a></li>
+          <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a></li>
+          <li><a href="https://www.songfacts.com/blog/pages/songfacts-api" target="_blank" rel="noopener">Songfacts API</a></li>
+          <li><a href="https://calendar.songfacts.com/" target="_blank" rel="noopener">Music History Calendar</a></li>
+          <li><a href="https://www.songfacts.com/blog/pages/song-licensing" target="_blank" rel="noopener">Song Licensing</a></li>
+          <li><a href="https://www.songfacts.com/blog/pages/affiliate-disclosure" target="_blank" rel="noopener">Affiliate Disclosure</a></li>
+          <li><a href="mailto:feedback@songfacts.com">Contact Us</a></li>
+        </ul>
+      </nav>
+
+      <nav class="footer-col" aria-labelledby="footer-follow-heading">
+        <h2 class="footer-heading" id="footer-follow-heading">Follow Us</h2>
+        <ul class="footer-links">
+          <li><a href="https://www.facebook.com/songfacts" target="_blank" rel="noopener">Facebook</a></li>
+          <li><a href="https://twitter.com/songfacts" target="_blank" rel="noopener">X (Twitter)</a></li>
+          <li><a href="https://www.youtube.com/user/songfactsdotcom" target="_blank" rel="noopener">YouTube</a></li>
+        </ul>
+      </nav>
+
+      <nav class="footer-col" aria-labelledby="footer-contribute-heading">
+        <h2 class="footer-heading" id="footer-contribute-heading">Contribution</h2>
+        <ul class="footer-links">
+          <li><a href="https://forum.songfacts.com/" target="_blank" rel="noopener">Message Boards</a></li>
+          <li><a href="https://www.songfacts.com/blog/pages/songfacts-writers" target="_blank" rel="noopener">Songfacts Writers</a></li>
+        </ul>
+      </nav>
+
+    </div>
+    <p class="footer-copyright">&copy;2026 Songfacts, LLC</p>
+  </footer>
+
+  <script>
+    // Center the active section tab in the mobile tab strip on load.
+    (function () {
+      var t = document.querySelector('.tab-nav a.is-active');
+      if (t && t.scrollIntoView) t.scrollIntoView({ inline: 'center', block: 'nearest' });
+    })();
+  </script>
 </body>
 </html>

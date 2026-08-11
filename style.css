@@ -34,6 +34,19 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Responsive conversion — in progress (footer is the first fluid component).
+   Every page shares the same three body children: header + main + footer. The
+   global 1280px lock that used to live on <body> is gone; instead we pin only
+   the header and the (still desktop-only) main content at 1280px, leaving the
+   footer free to be mobile-first. Effect on a phone: everything above the
+   footer behaves exactly as it does today (renders at 1280 and scrolls
+   horizontally), while the footer renders at the device width. As each section
+   above is converted to be responsive, its min-width comes off; once they all
+   are, this shim goes away entirely. */
+body > .site-header,
+body > main {
   min-width: 1280px;
 }
 
@@ -1352,4 +1365,349 @@ body {
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Site footer (responsive, mobile-first) — from songfacts_v7_mobile.pdf   */
+/* ---------------------------------------------------------------------- */
+
+/* Visually-hidden label (accessible name for the newsletter input). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.site-footer {
+  background: var(--orange);
+  color: #fff;
+  padding: 2.5rem 1.5rem 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-heading {
+  margin: 0 0 0.9rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.footer-newsletter-copy {
+  margin: 0 0 1rem;
+}
+
+.newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.newsletter-input {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: none;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.newsletter-input::placeholder {
+  color: #8a8a8a;
+}
+
+.newsletter-button {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: var(--brand-grey);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.newsletter-button:hover {
+  background: #4a4a4a;
+}
+
+.footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.footer-links a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.footer-copyright {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.85rem;
+}
+
+/* From tablet up, lay the newsletter and the three link groups side by side.
+   (Desktop footer will be refined against landingpage_v7.pdf later.) */
+@media (min-width: 768px) {
+  .site-footer {
+    padding: 3rem 2rem 1.5rem;
+  }
+
+  .footer-inner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2.5rem 3rem;
+  }
+
+  .footer-newsletter {
+    flex: 1 1 320px;
+    min-width: 280px;
+  }
+
+  .footer-col {
+    flex: 1 1 160px;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile navigation tab strip (from songfacts_v7_mobile.pdf)              */
+/* A horizontally-scrollable row of the 8 sections; the active one is a    */
+/* filled purple pill. Hidden on desktop, revealed in the mobile query.    */
+/* A tiny inline script on each page scrolls the active tab into view.     */
+/* ---------------------------------------------------------------------- */
+.tab-nav {
+  display: none;
+}
+
+/* ====================================================================== */
+/* MOBILE LAYOUT — below 768px everything reflows to a single column, per  */
+/* the designer's mobile PDF. Above 768px the desktop layout is untouched  */
+/* (main stays pinned at 1280px). This is the responsive conversion; the   */
+/* footer was step one and the transitional min-width shim now lifts here. */
+/* ====================================================================== */
+@media (max-width: 767.98px) {
+
+  /* Release the desktop width lock so content can reflow to fit. */
+  body > .site-header,
+  body > main {
+    min-width: 0;
+  }
+
+  /* --- Header: hamburger pinned left, logo centered, desktop nav hidden --- */
+  .header-inner {
+    position: relative;
+    justify-content: center;
+    gap: 0;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .menu-toggle {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .main-nav,
+  .social-links {
+    display: none;
+  }
+
+  /* --- Mobile section tab strip --- */
+  .tab-nav {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding: 0.55rem 1rem;
+    background: #f7f5f3;
+    border-bottom: 1px solid #e5e1dd;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tab-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-nav a {
+    flex: 0 0 auto;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--brand-grey);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .tab-nav a.is-active {
+    background: var(--purple);
+    color: #fff;
+  }
+
+  /* --- Trim section side padding for more content width on narrow screens --- */
+  .hero,
+  .very-human,
+  .available-now,
+  .coming-soon,
+  .get-started,
+  .page-header,
+  .page-content {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
+  .hero {
+    padding-top: 2.25rem;
+    padding-bottom: 2.25rem;
+  }
+
+  /* --- Landing hero: center the copy, and drop the CTA buttons below the two
+     highlight cards (per the mobile PDF). The buttons live inside .hero-copy
+     for the desktop layout, so we use display:contents to promote the copy's
+     children into the hero's flex flow — then `order` can place the buttons
+     after the cards without changing the desktop DOM. --- */
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .hero-copy {
+    display: contents;
+  }
+
+  .hero-copy h1 {
+    font-size: 1.7rem;
+    margin-bottom: 0;
+  }
+
+  .hero-copy p {
+    margin: 0 auto;
+  }
+
+  .hero-cards {
+    order: 0;
+    text-align: left;
+  }
+
+  .hero-actions {
+    order: 1;
+    width: 100%;
+  }
+
+  .hero-actions .btn {
+    flex: 1;
+  }
+
+  /* --- Landing: Available Now / Coming Soon feature grids to one column --- */
+  .feature-grid.cols-2,
+  .feature-grid.cols-3,
+  .feature-grid.cols-2-center {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- Contact form: paired fields stack --- */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- Example pages: every multi-column grid collapses to one column --- */
+  .card-grid.cols-4,
+  .calendar-grid.cols-2,
+  .calendar-grid.cols-3,
+  .blurbs-grid,
+  .quotes-grid,
+  .categories-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- SongFacts / ArtistFacts tiles: switch from the desktop's big centered
+     thumb-on-top to the mobile PDF's horizontal layout — a small square thumb
+     floated top-left with the title/artist/body flowing to its right and
+     wrapping beneath it. flow-root contains the float. --- */
+  .fact-tile {
+    display: flow-root;
+  }
+
+  .fact-tile .thumb {
+    float: left;
+    width: 88px;
+    margin: 0.15rem 0.9rem 0.4rem 0;
+  }
+
+  /* --- Categories: tighten the deep rabbit-hole indentation so it fits --- */
+  .category-chain {
+    padding: 1.25rem 1rem 1.5rem;
+  }
+
+  .chain-level {
+    padding-left: 1.1rem;
+  }
+
+  .chain-arrow {
+    margin-left: 1.4rem;
+  }
+
+  /* --- Trivia: drop the 3-column subgrid; each card becomes a plain block --- */
+  .trivia-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .trivia-card {
+    grid-row: auto;
+    grid-template-rows: none;
+    display: block;
+  }
+
+  /* --- CTA bar stacks (its side gutter comes from .page-content padding) --- */
+  .cta-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* --- Sub-page header: smaller title, and center the title + short
+     description per the mobile PDF (they're left-aligned on desktop). --- */
+  .page-header {
+    text-align: center;
+  }
+
+  .page-header h1 {
+    font-size: 1.6rem;
+  }
 }
