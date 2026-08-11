@@ -21,25 +21,29 @@ class SF_LP_Admin {
 	}
 
 	public static function register_menu() {
+		// Top-level menu — visible to admins, or any role granted Submissions access
+		// via Songfacts API CRM → Access Control.
 		add_menu_page(
 			'Songfacts API CRM',
 			'Songfacts API CRM',
-			'manage_options',
+			SF_LP_Access_Control::CAP_ANY,
 			'sf-lp-submissions',
 			array( __CLASS__, 'render_submissions_page' ),
 			'dashicons-media-audio',
 			26
 		);
 
+		// Submissions — controllable via Access Control.
 		add_submenu_page(
 			'sf-lp-submissions',
 			'Submissions',
 			'Submissions',
-			'manage_options',
+			SF_LP_Access_Control::CAP_PREFIX . 'submissions',
 			'sf-lp-submissions',
 			array( __CLASS__, 'render_submissions_page' )
 		);
 
+		// Settings — admin only always (holds the JWT signing secret).
 		add_submenu_page(
 			'sf-lp-submissions',
 			'Settings',
@@ -47,6 +51,16 @@ class SF_LP_Admin {
 			'manage_options',
 			'sf-lp-settings',
 			array( __CLASS__, 'render_settings_page' )
+		);
+
+		// Access Control — admin only always.
+		add_submenu_page(
+			'sf-lp-submissions',
+			'Access Control',
+			'Access Control',
+			'manage_options',
+			'sf-lp-access-control',
+			array( 'SF_LP_Access_Control', 'render_page' )
 		);
 	}
 
@@ -95,7 +109,7 @@ class SF_LP_Admin {
 	}
 
 	public static function render_submissions_page() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! SF_LP_Access_Control::can_view() ) {
 			return;
 		}
 
@@ -162,7 +176,7 @@ class SF_LP_Admin {
 	public static function ajax_mark_completed() {
 		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! SF_LP_Access_Control::can_view() || ! SF_LP_Access_Control::can_edit() ) {
 			wp_send_json_error( array( 'message' => 'Not allowed.' ), 403 );
 		}
 

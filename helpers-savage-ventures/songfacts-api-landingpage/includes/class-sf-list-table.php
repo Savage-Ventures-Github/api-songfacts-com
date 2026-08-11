@@ -118,7 +118,8 @@ class SF_LP_List_Table extends WP_List_Table {
 			? '<span class="sf-lp-badge sf-lp-badge-completed">Completed</span>'
 			: '<span class="sf-lp-badge sf-lp-badge-new">New</span>';
 
-		$button = $is_completed
+		// Read-only roles (Submissions granted, Edit Submissions not) see the badge only.
+		$button = ( $is_completed || ! SF_LP_Access_Control::can_edit() )
 			? ''
 			: sprintf(
 				'<button type="button" class="button button-small sf-lp-mark-completed" data-id="%d">Mark as Completed</button>',

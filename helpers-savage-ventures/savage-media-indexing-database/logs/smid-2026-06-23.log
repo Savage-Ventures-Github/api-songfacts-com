@@ -1,0 +1,18 @@
+[2026-06-23 10:53:16] [ERROR] OMA INSERT prepare() failed {"error":"Unknown column 'asset_title' in 'field list'","table":"sv_media_index"}
+[2026-06-23 10:57:16] [SUCCESS] OMA record inserted {"id":8,"public_url":"www.google.com","pairs":3}
+[2026-06-23 10:57:54] [SUCCESS] OMA record deleted {"id":8}
+[2026-06-23 10:59:40] [SUCCESS] OMA record inserted {"id":9,"public_url":"www.google.com","pairs":3}
+[2026-06-23 11:11:30] [SUCCESS] OMA record updated {"id":9,"public_url":"www.google.com","pairs":3}
+[2026-06-23 11:15:22] [SUCCESS] OMA record deleted {"id":2}
+[2026-06-23 11:15:30] [SUCCESS] OMA record deleted {"id":3}
+[2026-06-23 11:15:38] [SUCCESS] OMA record deleted {"id":5}
+[2026-06-23 11:15:45] [SUCCESS] OMA record deleted {"id":6}
+[2026-06-23 11:15:54] [SUCCESS] OMA record deleted {"id":7}
+[2026-06-23 11:24:13] [SUCCESS] OMA record inserted {"id":10,"public_url":"www.google.com","pairs":2}
+[2026-06-23 11:26:18] [SUCCESS] OMA record updated {"id":10,"public_url":"www.google.com","pairs":1}
+[2026-06-23 11:31:23] [SUCCESS] OMA record updated {"id":10,"public_url":"www.google.com","pairs":3}
+[2026-06-23 11:56:20] [SUCCESS] OMA record updated {"id":10,"public_url":"www.google.com","pairs":3}
+[2026-06-23 12:11:17] [SUCCESS] OMA record updated {"id":11,"public_url":"www.google.com","pairs":2}
+[2026-06-23 12:12:15] [SUCCESS] OMA record updated {"id":11,"public_url":"www.google.com","pairs":2}
+[2026-06-23 12:58:54] [SUCCESS] OMA record inserted {"id":14,"public_url":"www.google.com","pairs":1}
+[2026-06-23 13:25:50] [SUCCESS] OMA record inserted {"id":15,"public_url":"www.google.com","pairs":2}

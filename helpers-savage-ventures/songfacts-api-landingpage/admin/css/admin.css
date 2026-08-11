@@ -40,3 +40,272 @@
 .sf-lp-mark-completed {
 	margin-left: 6px;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ACCESS CONTROL PAGE
+   ══════════════════════════════════════════════════════════════ */
+.sf-lp-access-wrap .sf-lp-page-title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 22px;
+	font-weight: 700;
+	color: #1d2327;
+	margin-bottom: 6px;
+}
+.sf-lp-access-wrap .sf-lp-page-title .dashicons {
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+	color: #2271b1;
+}
+.sf-lp-access-desc {
+	color: #646970;
+	font-size: 13px;
+	margin: 0 0 20px;
+	max-width: 720px;
+}
+
+/* Card wrapper */
+.sf-lp-access-card {
+	background: #fff;
+	border: 1px solid #e2e4e7;
+	border-radius: 8px;
+	overflow: hidden;
+	margin-bottom: 16px;
+}
+
+/* Table */
+.sf-lp-access-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.sf-lp-access-table thead tr {
+	background: #f8f9fa;
+	border-bottom: 2px solid #e2e4e7;
+}
+.sf-lp-access-table th {
+	padding: 14px 18px;
+	text-align: center;
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #50575e;
+}
+.sf-lp-access-table th.col-page {
+	text-align: left;
+	width: 300px;
+}
+.sf-lp-access-table td {
+	padding: 14px 18px;
+	border-bottom: 1px solid #f0f0f1;
+	text-align: center;
+	vertical-align: middle;
+}
+.sf-lp-access-table tbody tr:last-child td {
+	border-bottom: none;
+}
+.sf-lp-access-table tbody tr:hover {
+	background: #fafbfc;
+}
+
+/* Page column */
+.sf-lp-access-table td.col-page {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	text-align: left;
+	font-size: 13px;
+}
+.sf-lp-access-table td.col-page .dashicons {
+	color: #646970;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+.sf-lp-access-hint {
+	display: block;
+	margin-top: 2px;
+	font-size: 11px;
+	line-height: 1.5;
+	color: #646970;
+}
+
+/* Role header */
+.sf-lp-role-head {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	font-size: 11px;
+}
+.sf-lp-role-head .dashicons {
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+	color: #646970;
+}
+
+/* Full Access badge (admin column) */
+.sf-lp-full-access {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #00a32a;
+}
+.sf-lp-full-access .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	color: #00a32a;
+}
+
+/* Locked rows */
+.sf-lp-row-locked {
+	background: #fafafa;
+	opacity: 0.75;
+}
+.sf-lp-locked-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: #c3c4c7;
+}
+.sf-lp-locked-icon .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+.sf-lp-admin-only-tag {
+	display: inline-block;
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #646970;
+	background: #f0f0f1;
+	border-radius: 3px;
+	padding: 2px 6px;
+	margin-left: 6px;
+}
+
+/* ── Toggle switch ── */
+.sf-lp-toggle {
+	display: inline-flex;
+	align-items: center;
+	cursor: pointer;
+	user-select: none;
+}
+.sf-lp-toggle input[type="checkbox"] {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+.sf-lp-toggle-track {
+	position: relative;
+	width: 40px;
+	height: 22px;
+	background: #c3c4c7;
+	border-radius: 11px;
+	transition: background 0.2s ease;
+	flex-shrink: 0;
+}
+.sf-lp-toggle-thumb {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 16px;
+	height: 16px;
+	background: #fff;
+	border-radius: 50%;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	transition: transform 0.2s ease;
+}
+.sf-lp-toggle input:checked ~ .sf-lp-toggle-track {
+	background: #2271b1;
+}
+.sf-lp-toggle input:checked ~ .sf-lp-toggle-track .sf-lp-toggle-thumb {
+	transform: translateX(18px);
+}
+.sf-lp-toggle input:focus ~ .sf-lp-toggle-track {
+	box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.3);
+}
+
+/* Footer */
+.sf-lp-access-footer {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 4px 0 16px;
+}
+.sf-lp-access-footer .sf-lp-save-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 18px;
+	font-size: 13px;
+	height: auto;
+}
+.sf-lp-access-footer .sf-lp-save-btn .dashicons {
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+}
+
+/* Role key under each column header — confirms which role_key a toggle writes to */
+.sf-lp-role-key {
+	font-size: 10px;
+	font-weight: 400;
+	text-transform: none;
+	letter-spacing: 0;
+	color: #787c82;
+	background: transparent;
+	padding: 0;
+}
+
+/* ── Diagnostics ── */
+.sf-lp-diag {
+	margin: 8px 0 24px;
+	background: #fff;
+	border: 1px solid #e2e4e7;
+	border-radius: 8px;
+}
+.sf-lp-diag > summary {
+	cursor: pointer;
+	padding: 12px 18px;
+	font-size: 13px;
+	font-weight: 600;
+	color: #50575e;
+}
+.sf-lp-diag[open] > summary {
+	border-bottom: 1px solid #f0f0f1;
+}
+.sf-lp-diag-body {
+	padding: 4px 18px 18px;
+}
+.sf-lp-diag-body h3 {
+	font-size: 13px;
+	margin: 18px 0 8px;
+}
+.sf-lp-diag-table {
+	margin-bottom: 8px;
+}
+.sf-lp-diag-table th,
+.sf-lp-diag-table td {
+	font-size: 12px;
+}
+.sf-lp-diag-bad {
+	color: #b32d2e;
+	font-weight: 600;
+}
+.sf-lp-diag-list {
+	margin: 0;
+	font-size: 12px;
+	list-style: disc inside;
+}
