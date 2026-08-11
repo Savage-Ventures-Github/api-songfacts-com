@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1280, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Songfacts API &#8212; Invigorate your app</title>
   <meta name="description" content="Songfacts API delivers the stories behind the songs and artists as ready-to-read Songfacts and Artistfacts your app can drop straight into any music experience.">
   <meta property="og:type" content="website">
@@ -20,6 +20,30 @@
   <meta name="twitter:description" content="Songfacts API delivers the stories behind the songs and artists as ready-to-read Songfacts and Artistfacts your app can drop straight into any music experience.">
   <meta name="twitter:image" content="https://api-draft.songfacts.com/img/seo_featured.jpg">
   <meta name="twitter:image:alt" content="Songfacts API - Invigorate your app with the stories behind the songs. Human-written Songfacts and Artistfacts.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://api-draft.songfacts.com/#organization",
+        "name": "Songfacts",
+        "url": "https://api-draft.songfacts.com/"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://api-draft.songfacts.com/#website",
+        "url": "https://api-draft.songfacts.com/",
+        "name": "Songfacts API",
+        "description": "Songfacts API delivers the stories behind the songs and artists as ready-to-read Songfacts and Artistfacts your app can drop straight into any music experience.",
+        "publisher": {
+          "@id": "https://api-draft.songfacts.com/#organization"
+        },
+        "inLanguage": "en-US"
+      }
+    ]
+  }
+  </script>
   <link rel="stylesheet" href="style.css?v=2">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
 </head>
