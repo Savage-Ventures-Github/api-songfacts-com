@@ -3,20 +3,8 @@
 // The internal WordPress destination URL has been replaced with a placeholder
 // (<WORDPRESS_HOST>) because this repo is public. See ../README.md.
 
-const ALLOWED_HOSTNAMES = new Set([
-	"api.songfacts.com",
-	"api-draft.songfacts.com",
-	"dev-api.songfacts.com",
-	"localhost",
-	"127.0.0.1",
-]);
-const STATIC_ALLOWED_ORIGINS = new Set([
-	"https://api.songfacts.com",
-	"https://api-draft.songfacts.com",
-	"https://dev-api.songfacts.com",
-	"null",
-]);
-const LOCAL_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const ALLOWED_HOSTNAMES = new Set(["api.songfacts.com"]);
+const STATIC_ALLOWED_ORIGINS = new Set(["https://api.songfacts.com"]);
 
 const TURNSTILE_ACTION = "contact";
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
@@ -39,7 +27,7 @@ interface FormFields {
 
 function isAllowedOrigin(origin: string | null): origin is string {
 	if (!origin) return false;
-	return STATIC_ALLOWED_ORIGINS.has(origin) || LOCAL_ORIGIN_RE.test(origin);
+	return STATIC_ALLOWED_ORIGINS.has(origin);
 }
 
 function corsHeaders(origin: string): HeadersInit {

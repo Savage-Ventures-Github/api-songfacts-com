@@ -35,12 +35,11 @@ REST endpoint (JWT-authenticated). Per request it:
 ## Allowed origins / hostnames
 
 Both the CORS origin check (`STATIC_ALLOWED_ORIGINS`) and the Turnstile hostname
-check (`ALLOWED_HOSTNAMES`) currently permit:
+check (`ALLOWED_HOSTNAMES`) are locked to production only:
 
 - `api.songfacts.com` (production)
-- `api-draft.songfacts.com`
-- `dev-api.songfacts.com`
-- `localhost` / `127.0.0.1` (local dev)
 
-To add an environment, add it to **both** sets and `wrangler deploy` from the
+Local/staging origins (`localhost`, `127.0.0.1`, `dev-api`, `api-draft`, and the
+`null` file:// affordance) were removed for the prod cutover. To temporarily add
+an environment back, add it to **both** sets and `wrangler deploy` from the
 canonical project.
