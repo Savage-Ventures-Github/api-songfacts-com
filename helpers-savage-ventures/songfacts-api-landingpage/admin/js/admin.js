@@ -52,10 +52,113 @@
 			});
 		}
 
+		initSettingsTabs();
 		initRecipients();
 		initTestNotification();
 		initClearLog();
+		initVisitorTest();
 	});
+
+	/* ── Settings page: Notifications to Visitors / Administrators tabs ── */
+
+	function initSettingsTabs() {
+		var wrapper = document.getElementById("sf-lp-settings-tabs");
+		if (!wrapper) {
+			return;
+		}
+
+		var tabs = wrapper.querySelectorAll(".nav-tab");
+		var panels = document.querySelectorAll(".sf-lp-tab-panel");
+
+		wrapper.addEventListener("click", function (event) {
+			var tab = event.target.closest(".nav-tab");
+			if (!tab) {
+				return;
+			}
+			event.preventDefault();
+
+			var target = tab.getAttribute("data-sf-lp-tab");
+
+			tabs.forEach(function (t) {
+				t.classList.toggle("nav-tab-active", t === tab);
+			});
+			panels.forEach(function (panel) {
+				panel.hidden = panel.getAttribute("data-sf-lp-panel") !== target;
+			});
+		});
+	}
+
+	/* ── Notifications to Visitors: send-test-to-an-address fields ── */
+
+	function initVisitorTest() {
+		var showBtn = document.getElementById("sf-lp-send-test-visitor");
+		var fields = document.getElementById("sf-lp-test-visitor-fields");
+		var confirmBtn = document.getElementById("sf-lp-test-visitor-confirm");
+		var cancelBtn = document.getElementById("sf-lp-test-visitor-cancel");
+		var nameInput = document.getElementById("sf-lp-test-visitor-first-name");
+		var emailInput = document.getElementById("sf-lp-test-visitor-email");
+		var status = document.getElementById("sf-lp-test-visitor-status");
+
+		if (!showBtn || !fields || !confirmBtn || !cancelBtn || !emailInput) {
+			return;
+		}
+
+		// Fields only appear once the button is clicked — that's the whole point,
+		// not just an animation choice, so there's no "expanded by default" case.
+		showBtn.addEventListener("click", function () {
+			showBtn.hidden = true;
+			fields.hidden = false;
+			emailInput.focus();
+		});
+
+		cancelBtn.addEventListener("click", function () {
+			fields.hidden = true;
+			showBtn.hidden = false;
+			if (status) {
+				status.textContent = "";
+				status.className = "sf-lp-inline-status";
+			}
+		});
+
+		confirmBtn.addEventListener("click", function () {
+			var email = emailInput.value.trim();
+
+			if (!email) {
+				emailInput.focus();
+				if (status) {
+					status.textContent = "Enter an email address first.";
+					status.className = "sf-lp-inline-status is-error";
+				}
+				return;
+			}
+
+			confirmBtn.disabled = true;
+			if (status) {
+				status.textContent = "Sending...";
+				status.className = "sf-lp-inline-status";
+			}
+
+			ajaxPost("sf_lp_send_test_visitor_notification", {
+				email: email,
+				first_name: nameInput ? nameInput.value.trim() : "",
+			})
+				.then(function () {
+					if (status) {
+						status.textContent = "Sent to " + email + ".";
+						status.className = "sf-lp-inline-status is-ok";
+					}
+				})
+				.catch(function (err) {
+					if (status) {
+						status.textContent = err.message || "Something went wrong.";
+						status.className = "sf-lp-inline-status is-error";
+					}
+				})
+				.finally(function () {
+					confirmBtn.disabled = false;
+				});
+		});
+	}
 
 	/* ── Notifications to Administrators: recipient repeater ── */
 

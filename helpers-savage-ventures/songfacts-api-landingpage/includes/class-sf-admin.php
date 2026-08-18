@@ -10,10 +10,14 @@ class SF_LP_Admin {
 
 	const OPTION_JWT_SECRET             = 'sf_lp_jwt_secret';
 	const OPTION_VISITOR_REPLY_ENABLED  = 'sf_lp_visitor_reply_enabled';
+	const OPTION_VISITOR_REPLY_SUBJECT  = 'sf_lp_visitor_reply_subject';
 	const OPTION_VISITOR_REPLY_MESSAGE  = 'sf_lp_visitor_reply_message';
 	const NONCE_ACTION                  = 'sf_lp_admin_nonce';
 
-	const DEFAULT_VISITOR_REPLY_MESSAGE = "Thank you for your interest in the Songfacts API. We've received your message and someone from our team will be in touch soon.";
+	// {first_name} and {site_name} are replaced in both fields below — see
+	// apply_visitor_tokens().
+	const DEFAULT_VISITOR_REPLY_SUBJECT = 'Thanks for reaching out to {site_name}';
+	const DEFAULT_VISITOR_REPLY_MESSAGE = "Hi {first_name},\n\nThank you for your interest in the Songfacts API. We've received your message and someone from our team will be in touch soon.";
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
@@ -23,6 +27,7 @@ class SF_LP_Admin {
 		add_action( 'wp_ajax_sf_lp_delete_samples', array( __CLASS__, 'ajax_delete_samples' ) );
 		add_action( 'wp_ajax_sf_lp_send_test_notification', array( __CLASS__, 'ajax_send_test_notification' ) );
 		add_action( 'wp_ajax_sf_lp_clear_email_log', array( __CLASS__, 'ajax_clear_email_log' ) );
+		add_action( 'wp_ajax_sf_lp_send_test_visitor_notification', array( __CLASS__, 'ajax_send_test_visitor_notification' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 	}
 
@@ -93,11 +98,31 @@ class SF_LP_Admin {
 
 		register_setting(
 			'sf_lp_settings',
+			SF_LP_Notifications::OPTION_SUBJECT,
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( 'SF_LP_Notifications', 'sanitize_subject' ),
+				'default'           => SF_LP_Notifications::DEFAULT_SUBJECT,
+			)
+		);
+
+		register_setting(
+			'sf_lp_settings',
 			self::OPTION_VISITOR_REPLY_ENABLED,
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => array( __CLASS__, 'sanitize_visitor_reply_enabled' ),
 				'default'           => '',
+			)
+		);
+
+		register_setting(
+			'sf_lp_settings',
+			self::OPTION_VISITOR_REPLY_SUBJECT,
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => self::DEFAULT_VISITOR_REPLY_SUBJECT,
 			)
 		);
 
@@ -123,6 +148,21 @@ class SF_LP_Admin {
 	 */
 	public static function sanitize_visitor_reply_enabled( $value ) {
 		return '1' === (string) $value ? '1' : '';
+	}
+
+	/**
+	 * Replaces the merge tokens available in the visitor auto-reply subject and
+	 * message: {first_name} (the visitor's own submitted first name) and
+	 * {site_name} (this site's title). Plain strtr() — no regex, so a stray
+	 * '{' or '}' elsewhere in the text is never touched.
+	 */
+	private static function apply_visitor_tokens( $text, $first_name ) {
+		$tokens = array(
+			'{first_name}' => $first_name,
+			'{site_name}'  => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+		);
+
+		return strtr( $text, $tokens );
 	}
 
 	public static function enqueue_assets( $hook ) {
@@ -185,59 +225,95 @@ class SF_LP_Admin {
 		<div class="wrap">
 			<h1>Songfacts API CRM Settings</h1>
 			<?php settings_errors(); ?>
+
+			<h2 class="nav-tab-wrapper" id="sf-lp-settings-tabs">
+				<a href="#" class="nav-tab nav-tab-active" data-sf-lp-tab="visitors">Notifications to Visitors</a>
+				<a href="#" class="nav-tab" data-sf-lp-tab="administrators">Notifications to Administrators</a>
+			</h2>
+
 			<form method="post" action="options.php">
 				<?php settings_fields( 'sf_lp_settings' ); ?>
 
-				<h2>Notifications to Visitors</h2>
-				<p class="description">Auto respond to visitors with an acknowledgement of their submission.</p>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row">Auto-Reply</th>
-						<td>
-							<label for="sf_lp_visitor_reply_enabled">
-								<!-- Unchecked checkboxes are omitted from $_POST entirely, so this hidden
-								     "0" (rendered first, overridden by the checkbox's "1" when checked)
-								     is what lets an admin actually turn the toggle back off. -->
-								<input type="hidden" name="<?php echo esc_attr( self::OPTION_VISITOR_REPLY_ENABLED ); ?>" value="0">
-								<input type="checkbox" id="sf_lp_visitor_reply_enabled"
-									name="<?php echo esc_attr( self::OPTION_VISITOR_REPLY_ENABLED ); ?>" value="1"
-									<?php checked( '1', get_option( self::OPTION_VISITOR_REPLY_ENABLED, '' ) ); ?>>
-								Automatically email visitors an acknowledgement when they submit the interest form.
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="sf_lp_visitor_reply_message">Acknowledgement Message</label></th>
-						<td>
-							<textarea id="sf_lp_visitor_reply_message"
-								name="<?php echo esc_attr( self::OPTION_VISITOR_REPLY_MESSAGE ); ?>"
-								rows="6" class="large-text"><?php echo esc_textarea( get_option( self::OPTION_VISITOR_REPLY_MESSAGE, self::DEFAULT_VISITOR_REPLY_MESSAGE ) ); ?></textarea>
-							<p class="description">
-								Plain text only (no HTML) — sent verbatim as the body of the acknowledgement
-								email to the address the visitor submitted.
-							</p>
-						</td>
-					</tr>
-				</table>
+				<div class="sf-lp-tab-panel" data-sf-lp-panel="visitors">
+					<p class="description sf-lp-tab-note">
+						Auto respond to visitors with an acknowledgement of their submission. The subject
+						and message below both support fill-in fields: <code>{first_name}</code> and
+						<code>{site_name}</code> — replaced with the visitor's own submitted first name and
+						this site's title.
+					</p>
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row">Auto-Reply</th>
+							<td>
+								<label for="sf_lp_visitor_reply_enabled">
+									<!-- Unchecked checkboxes are omitted from $_POST entirely, so this hidden
+									     "0" (rendered first, overridden by the checkbox's "1" when checked)
+									     is what lets an admin actually turn the toggle back off. -->
+									<input type="hidden" name="<?php echo esc_attr( self::OPTION_VISITOR_REPLY_ENABLED ); ?>" value="0">
+									<input type="checkbox" id="sf_lp_visitor_reply_enabled"
+										name="<?php echo esc_attr( self::OPTION_VISITOR_REPLY_ENABLED ); ?>" value="1"
+										<?php checked( '1', get_option( self::OPTION_VISITOR_REPLY_ENABLED, '' ) ); ?>>
+									Automatically email visitors an acknowledgement when they submit the interest form.
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="sf_lp_visitor_reply_subject">Subject</label></th>
+							<td>
+								<input type="text" id="sf_lp_visitor_reply_subject" class="large-text"
+									name="<?php echo esc_attr( self::OPTION_VISITOR_REPLY_SUBJECT ); ?>"
+									value="<?php echo esc_attr( get_option( self::OPTION_VISITOR_REPLY_SUBJECT, self::DEFAULT_VISITOR_REPLY_SUBJECT ) ); ?>">
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="sf_lp_visitor_reply_message">Acknowledgement Message</label></th>
+							<td>
+								<textarea id="sf_lp_visitor_reply_message"
+									name="<?php echo esc_attr( self::OPTION_VISITOR_REPLY_MESSAGE ); ?>"
+									rows="6" class="large-text"><?php echo esc_textarea( get_option( self::OPTION_VISITOR_REPLY_MESSAGE, self::DEFAULT_VISITOR_REPLY_MESSAGE ) ); ?></textarea>
+								<p class="description">Plain text only (no HTML) — sent verbatim as the body of the acknowledgement email to the address the visitor submitted.</p>
+							</td>
+						</tr>
+					</table>
 
-				<hr>
+					<?php self::render_sender_and_preview( 'visitor' ); ?>
+				</div>
 
-				<h2 id="sf-lp-notifications">Notifications to Administrators</h2>
-				<p class="description sf-lp-section-desc">
-					Email one or more administrators whenever a new interest-form submission arrives from
-					the Songfacts API landing page. Each address has its own on/off switch, so an address
-					can stay in the list without receiving mail. Addresses are saved with the
-					<strong>Save Changes</strong> button below.
-				</p>
+				<div class="sf-lp-tab-panel" data-sf-lp-panel="administrators" hidden>
+					<p class="description sf-lp-section-desc">
+						Email one or more administrators whenever a new interest-form submission arrives from
+						the Songfacts API landing page. Each address has its own on/off switch, so an address
+						can stay in the list without receiving mail. Addresses are saved with the
+						<strong>Save Changes</strong> button below.
+					</p>
 
-				<?php self::render_recipients_table(); ?>
-				<?php self::render_from_identity(); ?>
-				<?php self::render_message_preview(); ?>
+					<?php self::render_recipients_table(); ?>
+
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><label for="sf_lp_notification_subject">Subject</label></th>
+							<td>
+								<input type="text" id="sf_lp_notification_subject" class="large-text"
+									name="<?php echo esc_attr( SF_LP_Notifications::OPTION_SUBJECT ); ?>"
+									value="<?php echo esc_attr( get_option( SF_LP_Notifications::OPTION_SUBJECT, SF_LP_Notifications::DEFAULT_SUBJECT ) ); ?>">
+								<p class="description">
+									Supports <code>{first_name}</code>, <code>{last_name}</code>,
+									<code>{submitter_name}</code> (falls back to their email if no name was given),
+									<code>{email}</code>, <code>{company}</code>, and <code>{site_name}</code>.
+									The message body itself isn't editable — it's always the full list of
+									submitted fields, shown in the preview below, so a field added to the
+									landing page later still shows up here with no code change.
+								</p>
+							</td>
+						</tr>
+					</table>
+
+					<?php self::render_sender_and_preview( 'admin' ); ?>
+					<?php self::render_email_log(); ?>
+				</div>
 
 				<?php submit_button(); ?>
 			</form>
-
-			<?php self::render_email_log(); ?>
 
 			<hr>
 
@@ -378,6 +454,33 @@ class SF_LP_Admin {
 	}
 
 	/**
+	 * The "Sender & Message Preview" expandable, shared by both tabs. The sender
+	 * identity really is identical either way — neither maybe_send_visitor_
+	 * acknowledgement() nor SF_LP_Notifications::send_for_submission() sets a
+	 * custom From header, so both go out with whatever WordPress/Post SMTP is
+	 * configured to use. Only the preview renderer differs per tab.
+	 *
+	 * @param string $context 'visitor' or 'admin'.
+	 */
+	private static function render_sender_and_preview( $context ) {
+		?>
+		<details class="sf-lp-diag">
+			<summary>Sender &amp; Message Preview</summary>
+			<div class="sf-lp-diag-body">
+				<?php
+				self::render_from_identity();
+				if ( 'admin' === $context ) {
+					self::render_message_preview();
+				} else {
+					self::render_visitor_message_preview();
+				}
+				?>
+			</div>
+		</details>
+		<?php
+	}
+
+	/**
 	 * Read-only display of the sender identity these notifications go out with.
 	 * Deliberately not editable here — it belongs to WordPress / Post SMTP.
 	 */
@@ -474,6 +577,76 @@ class SF_LP_Admin {
 			</span>
 			<span id="sf-lp-test-status" class="sf-lp-inline-status"></span>
 		</p>
+		<?php
+	}
+
+	/**
+	 * Plain-text preview of the visitor acknowledgement — subject and body with
+	 * {first_name}/{site_name} tokens applied — plus the "send a test copy"
+	 * fields (first name + email address), hidden until the button is clicked.
+	 *
+	 * Rendered from the most recent real submission (or placeholder data on a
+	 * fresh install) via the same SF_LP_Notifications::preview_submission()
+	 * the admin preview uses, so both tabs demo consistently.
+	 */
+	private static function render_visitor_message_preview() {
+		$preview    = SF_LP_Notifications::preview_submission();
+		$submission = $preview['submission'];
+		$first_name = (string) ( $submission['first_name'] ?? '' );
+
+		$subject_tpl = get_option( self::OPTION_VISITOR_REPLY_SUBJECT, self::DEFAULT_VISITOR_REPLY_SUBJECT );
+		if ( '' === trim( $subject_tpl ) ) {
+			$subject_tpl = self::DEFAULT_VISITOR_REPLY_SUBJECT;
+		}
+		$message_tpl = get_option( self::OPTION_VISITOR_REPLY_MESSAGE, self::DEFAULT_VISITOR_REPLY_MESSAGE );
+
+		$subject = self::apply_visitor_tokens( $subject_tpl, $first_name );
+		$body    = self::apply_visitor_tokens( $message_tpl, $first_name );
+		$enabled = '1' === get_option( self::OPTION_VISITOR_REPLY_ENABLED, '' );
+		?>
+		<h3 class="sf-lp-notify-subhead">Message Preview</h3>
+		<p class="description sf-lp-section-desc">
+			<?php if ( $preview['is_placeholder'] ) : ?>
+				No submissions have been received yet, so this preview uses placeholder data.
+			<?php else : ?>
+				Rendered from the most recent real submission.
+			<?php endif; ?>
+			<?php if ( ! $enabled ) : ?>
+				Auto-Reply is currently switched off, so this message is not being sent to anyone.
+			<?php endif; ?>
+		</p>
+		<div class="sf-lp-preview">
+			<div class="sf-lp-preview-head">
+				<div><span class="sf-lp-preview-label">Subject</span> <?php echo esc_html( $subject ); ?></div>
+				<div><span class="sf-lp-preview-label">To</span> <?php echo esc_html( $submission['email'] ?? '' ); ?></div>
+			</div>
+			<pre class="sf-lp-preview-text"><?php echo esc_html( $body ); ?></pre>
+		</div>
+		<p class="sf-lp-preview-actions">
+			<button type="button" class="button button-secondary" id="sf-lp-send-test-visitor">Send Test Notification</button>
+			<span class="description">
+				Sends this exact subject and message to an address you choose below, using whatever
+				first name you type in place of <code>{first_name}</code> — doesn't touch real
+				submissions or require Auto-Reply to be switched on.
+			</span>
+		</p>
+		<div class="sf-lp-test-visitor-fields" id="sf-lp-test-visitor-fields" hidden>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="sf-lp-test-visitor-first-name">First Name</label></th>
+					<td><input type="text" id="sf-lp-test-visitor-first-name" class="regular-text" placeholder="Optional"></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="sf-lp-test-visitor-email">Email Address</label></th>
+					<td><input type="email" id="sf-lp-test-visitor-email" class="regular-text" placeholder="you@example.com"></td>
+				</tr>
+			</table>
+			<p>
+				<button type="button" class="button button-primary" id="sf-lp-test-visitor-confirm">Send</button>
+				<button type="button" class="button" id="sf-lp-test-visitor-cancel">Cancel</button>
+				<span id="sf-lp-test-visitor-status" class="sf-lp-inline-status"></span>
+			</p>
+		</div>
 		<?php
 	}
 
@@ -669,7 +842,18 @@ class SF_LP_Admin {
 				return;
 			}
 
-			$subject = sprintf( 'Thanks for reaching out to %s', get_bloginfo( 'name' ) );
+			$subject = get_option( self::OPTION_VISITOR_REPLY_SUBJECT, self::DEFAULT_VISITOR_REPLY_SUBJECT );
+			if ( '' === trim( $subject ) ) {
+				// An admin can save the field blank; unlike a blank message (which
+				// cancels the send above), a blank subject just falls back rather
+				// than mailing with no subject line at all.
+				$subject = self::DEFAULT_VISITOR_REPLY_SUBJECT;
+			}
+
+			$first_name = is_array( $submission ) ? (string) ( $submission['first_name'] ?? '' ) : '';
+
+			$subject = self::apply_visitor_tokens( $subject, $first_name );
+			$message = self::apply_visitor_tokens( $message, $first_name );
 
 			// Explicit plain-text content type: the message is edited as plain text in
 			// Settings and must stay plain text in the sent email regardless of any
@@ -680,5 +864,55 @@ class SF_LP_Admin {
 			// Swallow — see the doc comment above. Nothing to log to; this plugin's
 			// only send log belongs to SF_LP_Notifications, not this simpler feature.
 		}
+	}
+
+	/**
+	 * Sends a test copy of the visitor acknowledgement to an admin-chosen
+	 * address, substituting an admin-chosen first name. Bypasses the Auto-Reply
+	 * toggle entirely — a test send has to work even while the feature itself
+	 * is switched off, the same way SF_LP_Notifications' admin test-send
+	 * ignores nothing but does require at least one enabled recipient (there's
+	 * no equivalent gate here since the address is typed in per-send, not
+	 * drawn from a stored list).
+	 *
+	 * @param string $email      Address to send to (validated by the caller).
+	 * @param string $first_name Value to substitute for {first_name}.
+	 * @return bool True if wp_mail() reported success.
+	 */
+	public static function send_test_visitor_acknowledgement( $email, $first_name ) {
+		$subject = get_option( self::OPTION_VISITOR_REPLY_SUBJECT, self::DEFAULT_VISITOR_REPLY_SUBJECT );
+		if ( '' === trim( $subject ) ) {
+			$subject = self::DEFAULT_VISITOR_REPLY_SUBJECT;
+		}
+
+		$message = get_option( self::OPTION_VISITOR_REPLY_MESSAGE, self::DEFAULT_VISITOR_REPLY_MESSAGE );
+
+		$subject = '[TEST] ' . self::apply_visitor_tokens( $subject, $first_name );
+		$message = self::apply_visitor_tokens( $message, $first_name );
+
+		return (bool) wp_mail( $email, $subject, $message, array( 'Content-Type: text/plain; charset=UTF-8' ) );
+	}
+
+	public static function ajax_send_test_visitor_notification() {
+		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Not allowed.' ), 403 );
+		}
+
+		$email      = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+		$first_name = isset( $_POST['first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_name'] ) ) : '';
+
+		if ( '' === $email || ! is_email( $email ) ) {
+			wp_send_json_error( array( 'message' => 'Enter a valid email address to send the test to.' ), 400 );
+		}
+
+		$sent = self::send_test_visitor_acknowledgement( $email, $first_name );
+
+		if ( ! $sent ) {
+			wp_send_json_error( array( 'message' => 'wp_mail() reported failure — check your mail configuration.' ), 500 );
+		}
+
+		wp_send_json_success( array( 'email' => $email ) );
 	}
 }

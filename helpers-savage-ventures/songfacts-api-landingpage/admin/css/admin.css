@@ -461,6 +461,17 @@
 	margin-top: 4px;
 }
 
+/* ── Settings page tabs ── */
+#sf-lp-settings-tabs {
+	margin-bottom: 0;
+}
+.sf-lp-tab-panel {
+	margin-top: 20px;
+}
+.sf-lp-tab-note {
+	max-width: 720px;
+}
+
 /* ── Message preview ── */
 .sf-lp-preview {
 	max-width: 860px;
@@ -493,6 +504,19 @@
 	height: 520px;
 	border: 0;
 	background: #f0f0f1;
+}
+.sf-lp-preview-text {
+	margin: 0;
+	padding: 16px;
+	max-height: 420px;
+	overflow-y: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	font-size: 13px;
+	line-height: 1.6;
+	color: #1d2327;
+	background: #fff;
 }
 .sf-lp-preview-actions {
 	max-width: 860px;

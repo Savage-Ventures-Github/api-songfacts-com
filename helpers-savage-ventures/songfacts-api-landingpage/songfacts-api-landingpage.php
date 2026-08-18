@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Songfacts API Landing Page
  * Description:       Receives relayed Songfacts API interest-form submissions (Cloudflare Worker → n8n → this plugin) and manages them from wp-admin.
- * Version:           1.3.0
+ * Version:           1.4.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            WingManWP
@@ -11,7 +11,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SF_LP_VERSION', '1.3.0' );
+define( 'SF_LP_VERSION', '1.4.0' );
 define( 'SF_LP_PLUGIN_FILE', __FILE__ );
 define( 'SF_LP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SF_LP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

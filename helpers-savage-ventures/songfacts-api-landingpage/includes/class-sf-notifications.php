@@ -31,6 +31,15 @@ class SF_LP_Notifications {
 	/** Hard cap on configured recipients, to keep one REST request bounded. */
 	const MAX_RECIPIENTS = 25;
 
+	/** Option: editable subject template — see apply_tokens() for merge tokens. */
+	const OPTION_SUBJECT = 'sf_lp_notification_subject';
+
+	/**
+	 * Reproduces the exact wording build_subject() used to hardcode, so an admin
+	 * who never touches this field sees no change in what gets sent.
+	 */
+	const DEFAULT_SUBJECT = '[{site_name}] New Songfacts API interest submission from {submitter_name}';
+
 	public static function init() {
 		add_action( 'sf_lp_submission_received', array( __CLASS__, 'on_submission_received' ), 10, 2 );
 	}
@@ -224,14 +233,47 @@ class SF_LP_Notifications {
 	   ────────────────────────────────────────────────────────────── */
 
 	public static function build_subject( $submission ) {
-		$name = trim( ( $submission['first_name'] ?? '' ) . ' ' . ( $submission['last_name'] ?? '' ) );
-		$name = '' !== $name ? $name : ( $submission['email'] ?? 'someone' );
+		$template = get_option( self::OPTION_SUBJECT, self::DEFAULT_SUBJECT );
 
-		return sprintf(
-			'[%s] New Songfacts API interest submission from %s',
-			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
-			$name
+		if ( '' === trim( (string) $template ) ) {
+			// An admin can save the field blank; fall back rather than mailing with
+			// no subject line at all.
+			$template = self::DEFAULT_SUBJECT;
+		}
+
+		return self::apply_tokens( $template, $submission );
+	}
+
+	/**
+	 * `register_setting` sanitize callback for OPTION_SUBJECT. A plain one-line
+	 * field — no textarea, so no line breaks to preserve.
+	 */
+	public static function sanitize_subject( $value ) {
+		return sanitize_text_field( (string) $value );
+	}
+
+	/**
+	 * Merge tokens available in the admin-notification subject template.
+	 * {submitter_name} carries the same "fall back to email if no name" logic the
+	 * subject line always had, so a template built from these tokens can
+	 * reproduce the original hardcoded wording exactly (see DEFAULT_SUBJECT).
+	 */
+	private static function apply_tokens( $text, $submission ) {
+		$first = (string) ( $submission['first_name'] ?? '' );
+		$last  = (string) ( $submission['last_name'] ?? '' );
+		$name  = trim( $first . ' ' . $last );
+		$name  = '' !== $name ? $name : (string) ( $submission['email'] ?? 'someone' );
+
+		$tokens = array(
+			'{first_name}'     => $first,
+			'{last_name}'      => $last,
+			'{submitter_name}' => $name,
+			'{email}'          => (string) ( $submission['email'] ?? '' ),
+			'{company}'        => (string) ( $submission['company'] ?? '' ),
+			'{site_name}'      => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
 		);
+
+		return strtr( (string) $text, $tokens );
 	}
 
 	/**
