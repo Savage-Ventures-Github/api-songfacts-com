@@ -51,7 +51,149 @@
 				});
 			});
 		}
+
+		initRecipients();
+		initTestNotification();
+		initClearLog();
 	});
+
+	/* ── Notifications to Administrators: recipient repeater ── */
+
+	function initRecipients() {
+		var table = document.getElementById("sf-lp-recipients");
+		var template = document.getElementById("sf-lp-recipient-template");
+		var addBtn = document.getElementById("sf-lp-add-recipient");
+
+		if (!table || !template || !addBtn) {
+			return;
+		}
+
+		var body = table.querySelector("tbody");
+		var emptyBody = table.querySelector(".sf-lp-notify-empty");
+
+		function syncEmptyState() {
+			if (!emptyBody) {
+				return;
+			}
+			emptyBody.style.display = body.querySelector("tr") ? "none" : "";
+		}
+
+		// Row indexes only have to be unique within the posted array — PHP
+		// re-keys it on save — so a monotonic counter is enough, and removing a
+		// row never needs the remaining ones renumbered.
+		var nextIndex = body.querySelectorAll("tr").length;
+
+		addBtn.addEventListener("click", function () {
+			var markup = template.innerHTML.split("__INDEX__").join(String(nextIndex));
+			nextIndex += 1;
+
+			var holder = document.createElement("tbody");
+			holder.innerHTML = markup;
+
+			var row = holder.querySelector("tr");
+			if (!row) {
+				return;
+			}
+
+			body.appendChild(row);
+			syncEmptyState();
+
+			var email = row.querySelector('input[type="email"]');
+			if (email) {
+				email.focus();
+			}
+		});
+
+		table.addEventListener("click", function (event) {
+			var removeBtn = event.target.closest(".sf-lp-remove-recipient");
+			if (!removeBtn) {
+				return;
+			}
+			event.preventDefault();
+			var row = removeBtn.closest("tr");
+			if (row) {
+				row.parentNode.removeChild(row);
+				syncEmptyState();
+			}
+		});
+
+		syncEmptyState();
+	}
+
+	function initTestNotification() {
+		var button = document.getElementById("sf-lp-send-test");
+		var status = document.getElementById("sf-lp-test-status");
+
+		if (!button) {
+			return;
+		}
+
+		button.addEventListener("click", function () {
+			if (!window.confirm("Send a test notification to every switched-on recipient?")) {
+				return;
+			}
+
+			button.disabled = true;
+			if (status) {
+				status.textContent = "Sending...";
+				status.className = "sf-lp-inline-status";
+			}
+
+			ajaxPost("sf_lp_send_test_notification", {})
+				.then(function (json) {
+					var data = json.data || {};
+					var message = "Sent " + data.sent + " test email" + (data.sent === 1 ? "" : "s") + ".";
+					if (data.failed) {
+						message += " " + data.failed + " failed — see the log below.";
+					}
+					if (status) {
+						status.textContent = message + " Reloading...";
+						status.className = "sf-lp-inline-status " + (data.failed ? "is-error" : "is-ok");
+					}
+					window.setTimeout(function () {
+						window.location.reload();
+					}, 1200);
+				})
+				.catch(function (err) {
+					button.disabled = false;
+					if (status) {
+						status.textContent = err.message || "Something went wrong.";
+						status.className = "sf-lp-inline-status is-error";
+					}
+				});
+		});
+	}
+
+	function initClearLog() {
+		var button = document.getElementById("sf-lp-clear-log");
+		var status = document.getElementById("sf-lp-log-status");
+
+		if (!button) {
+			return;
+		}
+
+		button.addEventListener("click", function () {
+			if (!window.confirm("Clear the notification email log?")) {
+				return;
+			}
+
+			button.disabled = true;
+			if (status) {
+				status.textContent = "Clearing...";
+			}
+
+			ajaxPost("sf_lp_clear_email_log", {})
+				.then(function () {
+					window.location.reload();
+				})
+				.catch(function (err) {
+					button.disabled = false;
+					if (status) {
+						status.textContent = err.message || "Something went wrong.";
+					}
+				});
+		});
+	}
 
 	function toggleDetail(row) {
 		var detail = document.getElementById(row.id + "-detail");

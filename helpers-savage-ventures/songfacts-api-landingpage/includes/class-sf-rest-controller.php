@@ -96,6 +96,13 @@ class SF_LP_REST_Controller {
 			return new WP_Error( 'sf_insert_failed', 'Could not save submission.', array( 'status' => 500 ) );
 		}
 
+		// Admin notifications hang off this, reading the row back so they see
+		// exactly what was stored (received_at, defaults) rather than the
+		// pre-insert array. Fired only for real submissions — the sample-data
+		// buttons go straight to SF_LP_DB::insert() and never reach here.
+		$stored = SF_LP_DB::get( $id );
+		do_action( 'sf_lp_submission_received', (int) $id, is_array( $stored ) ? $stored : array() );
+
 		return new WP_REST_Response( array( 'id' => $id, 'status' => 'received' ), 201 );
 	}
 
