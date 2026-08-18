@@ -89,9 +89,132 @@ class SF_LP_List_Table extends WP_List_Table {
 		if ( ! empty( $item['completed_at'] ) ) {
 			echo '<p><strong>Completed:</strong> ' . esc_html( $item['completed_at'] ) . ' UTC</p>';
 		}
+		echo '<p><strong>Visitor Acknowledgement:</strong> ' . self::render_acknowledgement_status( $item ) . '</p>';
 		echo '</div>';
 		echo '</td>';
 		echo '</tr>';
+	}
+
+	/**
+	 * Renders the "did the visitor acknowledgement email actually go out"
+	 * status for one submission's detail row.
+	 *
+	 * This plugin's own send path (SF_LP_Admin::maybe_send_visitor_acknowledgement())
+	 * keeps no record of its own — Post SMTP's Email Log is the only record,
+	 * per the task: "leverage Post SMTP records that will already exist."
+	 */
+	private static function render_acknowledgement_status( $item ) {
+		$log = self::find_acknowledgement_log( $item );
+
+		if ( null === $log ) {
+			return '<em>Not sent</em>';
+		}
+
+		return sprintf(
+			'<span class="sf-lp-badge %1$s">%2$s</span> %3$s',
+			esc_attr( $log['class'] ),
+			esc_html( $log['label'] ),
+			esc_html( $log['time'] )
+		);
+	}
+
+	/**
+	 * Looks up the Post SMTP log entry (if any) for the acknowledgement email
+	 * this submission's own address would have received, correlated purely by
+	 * recipient address + a time window starting at received_at — there's no
+	 * shared ID between the two plugins to join on directly.
+	 *
+	 * Deliberately reads the raw {$wpdb->prefix}post_smtp_logs table rather
+	 * than calling into any Post SMTP class: Post SMTP is already treated as
+	 * optional elsewhere in this plugin (see
+	 * SF_LP_Notifications::post_smtp_active()), and this table's shape
+	 * (PostmanEmailLogs::install_table(), gated by the postman_db_version
+	 * option) has been Post SMTP's storage since its 2.5.0 logging rewrite.
+	 *
+	 * @param array $item Submission row (needs 'email' and 'received_at').
+	 * @return array{time: string, label: string, class: string}|null Null if
+	 *         Post SMTP isn't active/on the modern table, or no log row matched.
+	 */
+	private static function find_acknowledgement_log( $item ) {
+		global $wpdb;
+
+		if ( empty( $item['email'] ) || empty( $item['received_at'] ) || ! get_option( 'postman_db_version' ) ) {
+			return null;
+		}
+
+		// Post SMTP's `time` column is current_time( 'timestamp' ) — the site's
+		// local wall-clock time expressed as a Unix timestamp, NOT a true UTC
+		// epoch (a well-known WordPress quirk: current_time('timestamp') omits
+		// the $gmt argument). received_at is stored as a real UTC MySQL
+		// datetime (see SF_LP_DB::insert()), so it has to be converted to that
+		// same "local time labeled as UTC" basis before comparing — comparing
+		// raw epoch seconds would silently mismatch by the site's UTC offset
+		// on any site not actually set to UTC.
+		$local_received = get_date_from_gmt( $item['received_at'], 'Y-m-d H:i:s' );
+		$window_start   = strtotime( $local_received . ' UTC' );
+
+		if ( false === $window_start ) {
+			return null;
+		}
+
+		// The send is synchronous, in the same request that inserts the
+		// submission, so the real log entry's time is normally within a
+		// second or two of received_at — this window is generous padding
+		// against clock/request-timing drift, not a real estimate.
+		$window_end = $window_start + 10 * MINUTE_IN_SECONDS;
+
+		$table = $wpdb->prefix . 'post_smtp_logs';
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT time, success FROM {$table} WHERE to_header = %s AND time >= %d AND time <= %d ORDER BY time ASC LIMIT 1",
+				$item['email'],
+				$window_start,
+				$window_end
+			),
+			ARRAY_A
+		);
+
+		if ( ! $row ) {
+			return null;
+		}
+
+		$status = self::interpret_post_smtp_success( $row['success'] );
+
+		return array(
+			// Matches Post SMTP's own Email Log screen exactly: plain date(),
+			// no WordPress timezone conversion — `time` is already the site's
+			// local wall-clock value, so running it through get_date_from_gmt()
+			// or date_i18n() here would apply the UTC offset a second time.
+			'time'  => date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $row['time'] ),
+			'label' => $status['label'],
+			'class' => $status['class'],
+		);
+	}
+
+	/**
+	 * Mirrors the exact success/failure interpretation Post SMTP's own Email
+	 * Log screen uses for its `success` column (see
+	 * PostmanEmailLogs::get_logs_ajax()) — the column isn't a clean boolean,
+	 * it's '1', one of two special strings, or an arbitrary error message, so
+	 * this has to match that quirk rather than "simplify" it, or a legitimate
+	 * fallback/queued send would show as Failed here while Post SMTP's own
+	 * log shows it as Success.
+	 */
+	private static function interpret_post_smtp_success( $value ) {
+		if ( '1' === (string) $value ) {
+			return array( 'label' => 'Sent', 'class' => 'sf-lp-badge-completed' );
+		}
+
+		if ( 'Sent ( ** Fallback ** )' === $value ) {
+			return array( 'label' => 'Sent (fallback)', 'class' => 'sf-lp-badge-completed' );
+		}
+
+		if ( 'In Queue' === $value ) {
+			return array( 'label' => 'In Queue', 'class' => 'sf-lp-badge-new' );
+		}
+
+		return array( 'label' => 'Failed: ' . $value, 'class' => 'sf-lp-badge-failed' );
 	}
 
 	protected function column_default( $item, $column_name ) {
